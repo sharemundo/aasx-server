@@ -875,7 +875,7 @@ namespace AasxServer
             }
         }
 
-        public class TransmitData
+     /*   public class TransmitData
         {
             public string source;
             public string destination;
@@ -897,7 +897,7 @@ namespace AasxServer
             {
                 data = new List<TransmitData> { };
             }
-        }
+        } */
 
         static bool getDirectory = true;
         static string getDirectoryDestination = "";
@@ -911,7 +911,8 @@ namespace AasxServer
         static int getaasxFile_fileTransmitted = 0;
         static int blockSize = 1500000;
 
-        static List<TransmitData> tdPending = new List<TransmitData> { };
+        static List<string> tdPending = new List<string> { };
+        
 
         public static void connectThreadLoop()
         {
@@ -919,22 +920,21 @@ namespace AasxServer
 
             while (connectLoop)
             {
-                TransmitFrame tf = new TransmitFrame
+                /* TransmitFrame tf = new TransmitFrame
                 {
                     source = connectNodeName
-                };
-                TransmitData td = null;
+                }; 
+                TransmitData td = null; */
 
+                I40MessageHelper _i40MessageHelper = new I40MessageHelper();
+                I40Message _i40MessageFrame = _i40MessageHelper.createConnectProtMessage(connectNodeName);
+                 
                 if (getDirectory)
                 {
                     Console.WriteLine("if getDirectory");
 
                     // AAAS Detail part 2 Descriptor
-                    TransmitFrame descriptortf = new TransmitFrame
-                    {
-                        source = connectNodeName
-                    };
-
+    
                     aasDirectoryParameters adp = new aasDirectoryParameters();
 
                     adp.source = connectNodeName;
@@ -943,71 +943,35 @@ namespace AasxServer
 
                     for (int j = 0; j < aascount; j++)
                     {
-                        aasListParameters alp = new aasListParameters();
 
                         if (Program.env[j] != null)
                         {
-                            alp.index = j;
 
                             /* Create Detail part 2 Descriptor Start */
                             aasDescriptor aasDsecritpor = Program.creatAASDescriptor(Program.env[j]);
-                            TransmitData aasDsecritporTData = new TransmitData
-                            {
-                                source = connectNodeName
-                            };
-                            aasDsecritporTData.type = "register";
-                            aasDsecritporTData.destination = "VWS_AAS_Registry";
-                            var aasDescriptorJsonData = JsonConvert.SerializeObject(aasDsecritpor, Newtonsoft.Json.Formatting.Indented,
+                            
+                            string aasDescriptorJsonData = JsonConvert.SerializeObject(aasDsecritpor, Newtonsoft.Json.Formatting.Indented,
                                                                         new JsonSerializerSettings
                                                                         {
                                                                             NullValueHandling = NullValueHandling.Ignore
                                                                         });
-                            aasDsecritporTData.publish.Add(aasDescriptorJsonData);
-                            descriptortf.data.Add(aasDsecritporTData);
-                            /* Create Detail part 2 Descriptor END */
+                            I40Message descriptorI40 = _i40MessageHelper.createDescriptorMessage(connectNodeName);
+                            descriptorI40.interactionElements.Add(aasDescriptorJsonData);
 
+                            string descriptorFrame = JsonConvert.SerializeObject(descriptorI40, Newtonsoft.Json.Formatting.Indented,
+                                                                        new JsonSerializerSettings
+                                                                        {
+                                                                            NullValueHandling = NullValueHandling.Ignore
+                                                                        });
+                            _i40MessageFrame.interactionElements.Add(descriptorFrame);
 
-                            alp.idShort = Program.env[j].AasEnv.AdministrationShells[0].idShort;
-                            alp.identification = Program.env[j].AasEnv.AdministrationShells[0].identification.ToString();
-                            alp.fileName = Program.envFileName[j];
-                            alp.assetId = "";
-                            var asset = Program.env[j].AasEnv.FindAsset(Program.env[j].AasEnv.AdministrationShells[0].assetRef);
-                            if (asset != null)
-                                alp.assetId = asset.identification.id;
-                            alp.humanEndPoint = blazorHostPort;
-                            alp.restEndPoint = hostPort;
-
-                            adp.aasList.Add(alp);
                         }
                     }
-
-                    string decriptorData = JsonConvert.SerializeObject(descriptortf, Formatting.Indented);
-                    Program.publishDescriptorData(decriptorData);
-
-                    td = new TransmitData
-                    {
-                        source = connectNodeName
-                    };
-
-                    var json = JsonConvert.SerializeObject(adp, Newtonsoft.Json.Formatting.Indented);
-                    td.type = "directory";
-                    td.destination = getDirectoryDestination;
-                    td.publish.Add(json);
-                    tf.data.Add(td);
-                    Console.WriteLine("Send directory");
-
-                    getDirectory = false;
-                    getDirectoryDestination = "";
                 }
 
                 if (getaasxFile_destination != "") // block transfer
                 {
                     dynamic res = new System.Dynamic.ExpandoObject();
-
-                    td = new TransmitData
-                    {
-                        source = connectNodeName
-                    };
 
                     int len = 0;
                     if ((getaasxFile_fileLenBase64 - getaasxFile_fileTransmitted) > blockSize)
@@ -1028,10 +992,14 @@ namespace AasxServer
 
                     string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
 
-                    td.destination = getaasxFile_destination;
-                    td.type = "getaasxBlock";
-                    td.publish.Add(responseJson);
-                    tf.data.Add(td);
+                    I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
+                                                                                        getaasxFile_destination,
+                                                                                        "AASxReceiver", "AASxSender", "getaasxBlock");
+
+
+                    getaasxI40Message.interactionElements.Add(responseJson);
+                    _i40MessageFrame.interactionElements.Add(JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented));
+
 
                     getaasxFile_fileTransmitted += len;
 
@@ -1049,9 +1017,9 @@ namespace AasxServer
 
                 if (tdPending.Count != 0)
                 {
-                    foreach (TransmitData tdp in tdPending)
+                    foreach (string tdp in tdPending)
                     {
-                        tf.data.Add(tdp);
+                        _i40MessageFrame.interactionElements.Add(tdp);
                     }
                     tdPending.Clear();
                 }
@@ -1085,15 +1053,13 @@ namespace AasxServer
                             }
                             if (toPublish)
                             {
-                                td = new TransmitData
-                                {
-                                    source = connectNodeName
-                                };
-
                                 var json = JsonConvert.SerializeObject(sm, Newtonsoft.Json.Formatting.Indented);
-                                td.type = "submodel";
-                                td.publish.Add(json);
-                                tf.data.Add(td);
+                                I40Message getSubmodeI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
+                                                                                        "SubmodelReceiver",
+                                                                                        "AASxReceiver", "AASxSender", "submodel");
+
+                                getSubmodeI40Message.interactionElements.Add(json);
+                                _i40MessageFrame.interactionElements.Add(JsonConvert.SerializeObject(getSubmodeI40Message, Newtonsoft.Json.Formatting.Indented););
                                 Console.WriteLine("Publish Submodel " + sm.idShort);
                             }
                         }
@@ -1106,36 +1072,20 @@ namespace AasxServer
                 {
                     foreach (string s in i40LanguageRuntime.sendFrameJSONRequester)
                     {
-                        td = new TransmitData
-                        {
-                            source = connectNodeName
-                        };
-
-                        td.type = "i40LanguageRuntime.sendFrameJSONRequester";
-                        var json = JsonConvert.SerializeObject(s, Newtonsoft.Json.Formatting.Indented);
-                        td.publish.Add(json);
-                        tf.data.Add(td);
+                        _i40MessageFrame.interactionElements.Add(s);
                     }
                     i40LanguageRuntime.sendFrameJSONRequester.Clear();
                 }
                 if (i40LanguageRuntime.isProvider && i40LanguageRuntime.sendFrameJSONProvider.Count != 0)
                 {
-                    td = new TransmitData
-                    {
-                        source = connectNodeName
-                    };
-
                     foreach (string s in i40LanguageRuntime.sendFrameJSONProvider)
                     {
-                        td.type = "i40LanguageRuntime.sendFrameJSONProvider";
-                        var json = JsonConvert.SerializeObject(s, Newtonsoft.Json.Formatting.Indented);
-                        td.publish.Add(json);
-                        tf.data.Add(td);
+                        _i40MessageFrame.interactionElements.Add(s);
                     }
                     i40LanguageRuntime.sendFrameJSONProvider.Clear();
                 }
 
-                string publish = JsonConvert.SerializeObject(tf, Formatting.Indented);
+                string publish = JsonConvert.SerializeObject(_i40MessageFrame, Formatting.Indented);
 
                 HttpClient httpClient;
                 if (clientHandler != null)
@@ -1166,23 +1116,26 @@ namespace AasxServer
 
                     try
                     {
-                        TransmitFrame tf2 = new TransmitFrame();
-                        tf2 = Newtonsoft.Json.JsonConvert.DeserializeObject<TransmitFrame>(content);
+                        /* TransmitFrame tf2 = new TransmitFrame(); */
+                        I40Message _I40Response = new I40Message();
+                        _I40Response = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message>(content);
 
-                        node = tf2.source;
-                        foreach (TransmitData td2 in tf2.data)
+                        foreach (String im in _I40Response.interactionElements)
                         {
-                            if (td2.type == "getDirectory")
+                            I40Message _I40IM = new I40Message();
+                            _I40IM = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message>(im);
+
+                            if (_I40IM.frame.type == "getDirectory")
                             {
                                 Console.WriteLine("received getDirectory");
                                 getDirectory = true;
-                                getDirectoryDestination = td2.source;
+                                getDirectoryDestination = _I40IM.frame.sender.identification.id;
                             }
 
-                            if (td2.type == "getaasx" && td2.destination == connectNodeName)
+                            if (_I40IM.frame.type == "getaasx" && _I40IM.frame.receiver.identification.id == connectNodeName)
                             {
-                                int aasIndex = Convert.ToInt32(td2.extensions);
-
+                                /*  int aasIndex = Convert.ToInt32(td2.extensions); Need to check with Andreas */
+                                int aasIndex = 0;
                                 dynamic res = new System.Dynamic.ExpandoObject();
 
                                 Byte[] binaryFile = File.ReadAllBytes(Program.envFileName[aasIndex]);
@@ -1193,24 +1146,23 @@ namespace AasxServer
                                 System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
                                 string fileToken = Jose.JWT.Encode(payload, enc.GetBytes(AasxRestServerLibrary.AasxHttpContextHelper.secretString), JwsAlgorithm.HS256);
 
+                                I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
+                                                                                        _I40IM.frame.sender.identification.id,
+                                                                                        _I40IM.frame.sender.role.name, "AASxSender", "getaasxFile");
+
                                 if (fileToken.Length <= blockSize)
                                 {
                                     res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
                                     res.fileData = fileToken;
 
                                     string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
-
-                                    TransmitData tdp = new TransmitData();
-
-                                    tdp.source = connectNodeName;
-                                    tdp.destination = td2.source;
-                                    tdp.type = "getaasxFile";
-                                    tdp.publish.Add(responseJson);
-                                    tdPending.Add(tdp);
+                                    getaasxI40Message.interactionElements.Add(responseJson);
+                                    string getaasxI40String = JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented);
+                                    tdPending.Add(getaasxI40String);
                                 }
                                 else
                                 {
-                                    getaasxFile_destination = td2.source;
+                                    getaasxFile_destination = _I40IM.frame.sender.identification.id;
                                     getaasxFile_fileName = Path.GetFileName(Program.envFileName[aasIndex]);
                                     getaasxFile_fileData = fileToken;
                                     getaasxFile_fileType = "getaasxFileStream";
@@ -1220,9 +1172,9 @@ namespace AasxServer
                                 }
                             }
 
-                            if (td2.type == "getaasxstream" && td2.destination == connectNodeName)
+                            if (_I40IM.frame.type == "getaasxstream" && _I40IM.frame.receiver.identification.id == connectNodeName)
                             {
-                                int aasIndex = Convert.ToInt32(td2.extensions);
+                                int aasIndex = 0; 
 
                                 dynamic res = new System.Dynamic.ExpandoObject();
 
@@ -1237,17 +1189,17 @@ namespace AasxServer
 
                                     string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
 
-                                    TransmitData tdp = new TransmitData();
+                                    I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
+                                                                                        _I40IM.frame.sender.identification.id,
+                                                                                        _I40IM.frame.sender.role.name, "AASxSender", "getaasxFile");
 
-                                    tdp.source = connectNodeName;
-                                    tdp.destination = td2.source;
-                                    tdp.type = "getaasxFile";
-                                    tdp.publish.Add(responseJson);
-                                    tdPending.Add(tdp);
+                                    getaasxI40Message.interactionElements.Add(responseJson);
+
+                                    tdPending.Add(JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented));
                                 }
                                 else
                                 {
-                                    getaasxFile_destination = td2.source;
+                                    getaasxFile_destination = _I40IM.frame.sender.identification.id;
                                     getaasxFile_fileName = Path.GetFileName(Program.envFileName[aasIndex]);
                                     getaasxFile_fileData = binaryBase64;
                                     getaasxFile_fileType = "getaasxFile";
@@ -1257,9 +1209,9 @@ namespace AasxServer
                                 }
                             }
 
-                            if (td2.type == "submodel")
+                            if (_I40IM.frame.type == "submodel")
                             {
-                                foreach (string sm in td2.publish)
+                                foreach (string sm in _I40IM.interactionElements)
                                 {
                                     AdminShell.Submodel submodel = null;
                                     try
