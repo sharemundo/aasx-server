@@ -520,10 +520,11 @@ namespace AasxServer
                     var result = httpClient.PostAsync(connectServer + "/connect", contentJson).Result;
                     content = ContentToString(result.Content);
                 }
-                catch
+                catch (Exception e)
                 {
-
+                    Console.WriteLine(e.ToString());
                 }
+                Console.WriteLine(content);
                 //
                 // string content = "OK";
                 if (content == "OK")
@@ -875,30 +876,6 @@ namespace AasxServer
             }
         }
 
-     /*   public class TransmitData
-        {
-            public string source;
-            public string destination;
-            public string type;
-            public string encrypt;
-            public string extensions;
-            public List<string> publish;
-            public TransmitData()
-            {
-                publish = new List<string> { };
-            }
-        }
-
-        public class TransmitFrame
-        {
-            public string source;
-            public List<TransmitData> data;
-            public TransmitFrame()
-            {
-                data = new List<TransmitData> { };
-            }
-        } */
-
         static bool getDirectory = true;
         static string getDirectoryDestination = "";
 
@@ -920,11 +897,6 @@ namespace AasxServer
 
             while (connectLoop)
             {
-                /* TransmitFrame tf = new TransmitFrame
-                {
-                    source = connectNodeName
-                }; 
-                TransmitData td = null; */
 
                 I40MessageHelper _i40MessageHelper = new I40MessageHelper();
                 I40Message _i40MessageFrame = _i40MessageHelper.createConnectProtMessage(connectNodeName);
@@ -967,6 +939,9 @@ namespace AasxServer
 
                         }
                     }
+
+                    getDirectory = false;
+                    getDirectoryDestination = "";
                 }
 
                 if (getaasxFile_destination != "") // block transfer
@@ -1059,7 +1034,7 @@ namespace AasxServer
                                                                                         "AASxReceiver", "AASxSender", "submodel");
 
                                 getSubmodeI40Message.interactionElements.Add(json);
-                                _i40MessageFrame.interactionElements.Add(JsonConvert.SerializeObject(getSubmodeI40Message, Newtonsoft.Json.Formatting.Indented););
+                                _i40MessageFrame.interactionElements.Add(JsonConvert.SerializeObject(getSubmodeI40Message, Newtonsoft.Json.Formatting.Indented));
                                 Console.WriteLine("Publish Submodel " + sm.idShort);
                             }
                         }
@@ -1113,7 +1088,6 @@ namespace AasxServer
                 {
                     newConnectData = false;
                     string node = "";
-
                     try
                     {
                         /* TransmitFrame tf2 = new TransmitFrame(); */
@@ -1355,7 +1329,7 @@ namespace AasxServer
                             }
 
                             // i40language
-                            if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
+                           /* if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
                             {
                                 foreach (string s in td2.publish)
                                 {
@@ -1368,7 +1342,7 @@ namespace AasxServer
                                 {
                                     i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
                                 }
-                            }
+                            } */
                         }
                     }
                     catch
