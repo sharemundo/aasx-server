@@ -889,7 +889,6 @@ namespace AasxServer
         static int blockSize = 1500000;
 
         static List<string> tdPending = new List<string> { };
-        
 
         public static void connectThreadLoop()
         {
@@ -897,7 +896,6 @@ namespace AasxServer
 
             while (connectLoop)
             {
-
                 I40MessageHelper _i40MessageHelper = new I40MessageHelper();
                 I40Message _i40MessageFrame = _i40MessageHelper.createConnectProtMessage(connectNodeName);
                  
@@ -906,7 +904,7 @@ namespace AasxServer
                     Console.WriteLine("if getDirectory");
 
                     // AAAS Detail part 2 Descriptor
-    
+
                     aasDirectoryParameters adp = new aasDirectoryParameters();
 
                     adp.source = connectNodeName;
@@ -922,21 +920,20 @@ namespace AasxServer
                             /* Create Detail part 2 Descriptor Start */
                             aasDescriptor aasDsecritpor = Program.creatAASDescriptor(Program.env[j]);
                             
-                            string aasDescriptorJsonData = JsonConvert.SerializeObject(aasDsecritpor, Newtonsoft.Json.Formatting.Indented,
-                                                                        new JsonSerializerSettings
-                                                                        {
-                                                                            NullValueHandling = NullValueHandling.Ignore
-                                                                        });
+                            string aasDescriptorJsonData = JsonConvert.SerializeObject(
+                                aasDsecritpor, Newtonsoft.Json.Formatting.Indented,                                                                         new JsonSerializerSettings
+                                {
+                                    NullValueHandling = NullValueHandling.Ignore
+                                });
                             I40Message descriptorI40 = _i40MessageHelper.createDescriptorMessage(connectNodeName);
                             descriptorI40.interactionElements.Add(aasDescriptorJsonData);
 
-                            string descriptorFrame = JsonConvert.SerializeObject(descriptorI40, Newtonsoft.Json.Formatting.Indented,
-                                                                        new JsonSerializerSettings
-                                                                        {
-                                                                            NullValueHandling = NullValueHandling.Ignore
-                                                                        });
+                            string descriptorFrame = JsonConvert.SerializeObject(
+                                descriptorI40, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
+                                {
+                                    NullValueHandling = NullValueHandling.Ignore
+                                });
                             _i40MessageFrame.interactionElements.Add(descriptorFrame);
-
                         }
                     }
 
@@ -1163,9 +1160,9 @@ namespace AasxServer
 
                                     string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
 
-                                    I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
-                                                                                        _I40IM.frame.sender.identification.id,
-                                                                                        _I40IM.frame.sender.role.name, "AASxSender", "getaasxFile");
+                                    I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(
+                                        connectNodeName, _I40IM.frame.sender.identification.id,
+                                        _I40IM.frame.sender.role.name, "AASxSender", "getaasxFile");
 
                                     getaasxI40Message.interactionElements.Add(responseJson);
 
@@ -1696,7 +1693,7 @@ namespace AasxServer
                                             Password = p.value;
                                             break;
                                         case "OPCNamespace": // Namespace
-                                                             // TODO: if not int, currently throws nondescriptive error
+                                            // TODO: if not int, currently throws nondescriptive error
                                             if (int.TryParse(p.value, out int tmpI))
                                                 Namespace = tmpI;
                                             break;

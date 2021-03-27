@@ -73,7 +73,7 @@ namespace AasxServer
 
     public class I40MessageHelper
     {
-        public  I40Message createConnectProtMessage(string connectNodeName)
+        public I40Message createConnectProtMessage(string connectNodeName)
         {
             I40Message _i40Message = new I40Message();
             I40TransmitFrame i40Frame = new I40TransmitFrame();
@@ -118,7 +118,7 @@ namespace AasxServer
 
             return _i40Message;
         }
-        public  I40Message createDescriptorMessage(string connectNodeName)
+        public I40Message createDescriptorMessage(string connectNodeName)
         {
             I40Message _i40Message = new I40Message();
             I40TransmitFrame i40Frame = new I40TransmitFrame();
@@ -165,8 +165,8 @@ namespace AasxServer
         }
 
 
-        public  I40Message createInteractionMessage(string connectNodeName,
-                       string receiverId,string receiverRole, string senderRole, string messageType)
+        public I40Message createInteractionMessage(string connectNodeName,
+                       string receiverId, string receiverRole, string senderRole, string messageType)
         {
             I40Message _i40Message = new I40Message();
             I40TransmitFrame i40Frame = new I40TransmitFrame();
@@ -213,5 +213,4 @@ namespace AasxServer
         }
 
     }
-         
 }
