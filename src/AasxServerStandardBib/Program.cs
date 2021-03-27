@@ -898,7 +898,7 @@ namespace AasxServer
             {
                 I40MessageHelper _i40MessageHelper = new I40MessageHelper();
                 I40Message _i40MessageFrame = _i40MessageHelper.createConnectProtMessage(connectNodeName);
-                 
+
                 if (getDirectory)
                 {
                     Console.WriteLine("if getDirectory");
@@ -919,9 +919,9 @@ namespace AasxServer
 
                             /* Create Detail part 2 Descriptor Start */
                             aasDescriptor aasDsecritpor = Program.creatAASDescriptor(Program.env[j]);
-                            
+
                             string aasDescriptorJsonData = JsonConvert.SerializeObject(
-                                aasDsecritpor, Newtonsoft.Json.Formatting.Indented,                                                                         new JsonSerializerSettings
+                                aasDsecritpor, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
                                 {
                                     NullValueHandling = NullValueHandling.Ignore
                                 });
@@ -1145,7 +1145,7 @@ namespace AasxServer
 
                             if (_I40IM.frame.type == "getaasxstream" && _I40IM.frame.receiver.identification.id == connectNodeName)
                             {
-                                int aasIndex = 0; 
+                                int aasIndex = 0;
 
                                 dynamic res = new System.Dynamic.ExpandoObject();
 
@@ -1325,8 +1325,9 @@ namespace AasxServer
                                 }
                             }
 
-                            // i40language
-                           /* if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
+                           // i40language
+                           /*
+                            if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
                             {
                                 foreach (string s in td2.publish)
                                 {
@@ -1339,7 +1340,8 @@ namespace AasxServer
                                 {
                                     i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
                                 }
-                            } */
+                            }
+                           */
                         }
                     }
                     catch
