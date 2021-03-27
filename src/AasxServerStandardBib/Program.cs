@@ -1325,8 +1325,8 @@ namespace AasxServer
                                 }
                             }
 
-                           // i40language
-                           /*
+                            // i40language
+                            /*
                             if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
                             {
                                 foreach (string s in td2.publish)
@@ -1341,7 +1341,7 @@ namespace AasxServer
                                     i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
                                 }
                             }
-                           */
+                            */
                         }
                     }
                     catch
