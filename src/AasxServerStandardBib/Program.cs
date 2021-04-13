@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
@@ -1095,8 +1095,6 @@ namespace AasxServer
                         {
                             JObject jObject = JObject.Parse(im);
                             string messageType = (string)jObject["frame"]["type"];
-                            
-
                             if (messageType == "getDirectory")
                                   {
                                       Console.WriteLine("received getDirectory");
@@ -1124,7 +1122,6 @@ namespace AasxServer
                                     I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
                                                                                             (string)jObject["frame"]["sender"]["identification"]["id"],
                                                                                             (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile");
-
                                     if (fileToken.Length <= blockSize)
                                     {
                                         res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
@@ -1148,7 +1145,6 @@ namespace AasxServer
                                 }
 
                             }
-
                             if (messageType == "getaasxstream"  )
                             {
                                 string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
@@ -1189,7 +1185,6 @@ namespace AasxServer
                                     }
                                 }
                             }
-
                             if (messageType == "submodel")
                             {
                                 foreach (string sm in jObject["frame"]["interactionElements"])
@@ -1263,7 +1258,6 @@ namespace AasxServer
 
 
                                             }
-
                                             if (toSubscribe)
                                             {
                                                 Console.WriteLine("Subscribe Submodel " + submodel.idShort);
@@ -1285,7 +1279,6 @@ namespace AasxServer
                                                         k++;
                                                     }
                                                 }
-
                                                 bool overwrite = true;
                                                 int escount = existingSm.submodelElements.Count;
                                                 int count2 = submodel.submodelElements.Count;
@@ -1313,7 +1306,6 @@ namespace AasxServer
                                                         smi++;
                                                     }
                                                 }
-
                                                 if (!overwrite)
                                                 {
                                                     env[envi].AasEnv.Submodels.Remove(existingSm);
