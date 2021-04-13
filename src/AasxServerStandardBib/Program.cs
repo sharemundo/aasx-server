@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Help;
@@ -1094,96 +1094,101 @@ namespace AasxServer
 
                         foreach (String im in _I40Response.interactionElements)
                         {
-                            I40Message _I40IM = new I40Message();
-                            _I40IM = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message>(im);
-
-                            if (_I40IM.frame.type == "getDirectory")
-                            {
-                                Console.WriteLine("received getDirectory");
-                                getDirectory = true;
-                                getDirectoryDestination = _I40IM.frame.sender.identification.id;
+                            JObject jObject = JObject.Parse(im);
+                            string messageType = (string)jObject["frame"]["type"];
+                            if (messageType == "getDirectory")
+                                  {
+                                      Console.WriteLine("received getDirectory");
+                                      getDirectory = true;
+                                      getDirectoryDestination = (string)jObject["frame"]["sender"]["identification"]["id"];
                             }
-
-                            if (_I40IM.frame.type == "getaasx" && _I40IM.frame.receiver.identification.id == connectNodeName)
+                            
+                            if (messageType == "getaasx")
                             {
-                                /*  int aasIndex = Convert.ToInt32(td2.extensions); Need to check with Andreas */
-                                int aasIndex = 0;
-                                dynamic res = new System.Dynamic.ExpandoObject();
-
-                                Byte[] binaryFile = File.ReadAllBytes(Program.envFileName[aasIndex]);
-                                string binaryBase64 = Convert.ToBase64String(binaryFile);
-
-                                string payload = "{ \"file\" : \" " + binaryBase64 + " \" }";
-
-                                System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
-                                string fileToken = Jose.JWT.Encode(payload, enc.GetBytes(AasxRestServerLibrary.AasxHttpContextHelper.secretString), JwsAlgorithm.HS256);
-
-                                I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
-                                                                                        _I40IM.frame.sender.identification.id,
-                                                                                        _I40IM.frame.sender.role.name, "AASxSender", "getaasxFile");
-
-                                if (fileToken.Length <= blockSize)
+                                string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
+                                if (receiverId == connectNodeName)
                                 {
-                                    res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
-                                    res.fileData = fileToken;
+                                    /*  int aasIndex = Convert.ToInt32(td2.extensions); Need to check with Andreas */
+                                    int aasIndex = 0;
+                                    dynamic res = new System.Dynamic.ExpandoObject();
 
-                                    string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
-                                    getaasxI40Message.interactionElements.Add(responseJson);
-                                    string getaasxI40String = JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented);
-                                    tdPending.Add(getaasxI40String);
+                                    Byte[] binaryFile = File.ReadAllBytes(Program.envFileName[aasIndex]);
+                                    string binaryBase64 = Convert.ToBase64String(binaryFile);
+
+                                    string payload = "{ \"file\" : \" " + binaryBase64 + " \" }";
+
+                                    System.Text.ASCIIEncoding enc = new System.Text.ASCIIEncoding();
+                                    string fileToken = Jose.JWT.Encode(payload, enc.GetBytes(AasxRestServerLibrary.AasxHttpContextHelper.secretString), JwsAlgorithm.HS256);
+
+                                    I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
+                                                                                            (string)jObject["frame"]["sender"]["identification"]["id"],
+                                                                                            (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile");
+                                    if (fileToken.Length <= blockSize)
+                                    {
+                                        res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
+                                        res.fileData = fileToken;
+
+                                        string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
+                                        getaasxI40Message.interactionElements.Add(responseJson);
+                                        string getaasxI40String = JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented);
+                                        tdPending.Add(getaasxI40String);
+                                    }
+                                    else
+                                    {
+                                        getaasxFile_destination = (string)jObject["frame"]["sender"]["identification"]["id"];
+                                        getaasxFile_fileName = Path.GetFileName(Program.envFileName[aasIndex]);
+                                        getaasxFile_fileData = fileToken;
+                                        getaasxFile_fileType = "getaasxFileStream";
+                                        getaasxFile_fileLenBase64 = getaasxFile_fileData.Length;
+                                        getaasxFile_fileLenBinary = binaryFile.Length;
+                                        getaasxFile_fileTransmitted = 0;
+                                    }
                                 }
-                                else
+
+                            }
+                            if (messageType == "getaasxstream"  )
+                            {
+                                string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
+                                if (receiverId == connectNodeName)
                                 {
-                                    getaasxFile_destination = _I40IM.frame.sender.identification.id;
-                                    getaasxFile_fileName = Path.GetFileName(Program.envFileName[aasIndex]);
-                                    getaasxFile_fileData = fileToken;
-                                    getaasxFile_fileType = "getaasxFileStream";
-                                    getaasxFile_fileLenBase64 = getaasxFile_fileData.Length;
-                                    getaasxFile_fileLenBinary = binaryFile.Length;
-                                    getaasxFile_fileTransmitted = 0;
+                                    int aasIndex = 0;
+
+                                    dynamic res = new System.Dynamic.ExpandoObject();
+
+                                    Byte[] binaryFile = File.ReadAllBytes(Program.envFileName[aasIndex]);
+                                    string binaryBase64 = Convert.ToBase64String(binaryFile);
+
+                                    if (binaryBase64.Length <= blockSize)
+                                    {
+                                        res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
+                                        res.fileData = binaryBase64;
+                                        Byte[] fileBytes = Convert.FromBase64String(binaryBase64);
+
+                                        string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
+
+                                        I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(
+                                            connectNodeName, (string)jObject["frame"]["sender"]["identification"]["id"],
+                                            (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile");
+
+                                        getaasxI40Message.interactionElements.Add(responseJson);
+
+                                        tdPending.Add(JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented));
+                                    }
+                                    else
+                                    {
+                                        getaasxFile_destination = (string)jObject["frame"]["sender"]["identification"]["id"];
+                                        getaasxFile_fileName = Path.GetFileName(Program.envFileName[aasIndex]);
+                                        getaasxFile_fileData = binaryBase64;
+                                        getaasxFile_fileType = "getaasxFile";
+                                        getaasxFile_fileLenBase64 = getaasxFile_fileData.Length;
+                                        getaasxFile_fileLenBinary = binaryFile.Length;
+                                        getaasxFile_fileTransmitted = 0;
+                                    }
                                 }
                             }
-
-                            if (_I40IM.frame.type == "getaasxstream" && _I40IM.frame.receiver.identification.id == connectNodeName)
+                            if (messageType == "submodel")
                             {
-                                int aasIndex = 0;
-
-                                dynamic res = new System.Dynamic.ExpandoObject();
-
-                                Byte[] binaryFile = File.ReadAllBytes(Program.envFileName[aasIndex]);
-                                string binaryBase64 = Convert.ToBase64String(binaryFile);
-
-                                if (binaryBase64.Length <= blockSize)
-                                {
-                                    res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
-                                    res.fileData = binaryBase64;
-                                    Byte[] fileBytes = Convert.FromBase64String(binaryBase64);
-
-                                    string responseJson = JsonConvert.SerializeObject(res, Formatting.Indented);
-
-                                    I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(
-                                        connectNodeName, _I40IM.frame.sender.identification.id,
-                                        _I40IM.frame.sender.role.name, "AASxSender", "getaasxFile");
-
-                                    getaasxI40Message.interactionElements.Add(responseJson);
-
-                                    tdPending.Add(JsonConvert.SerializeObject(getaasxI40Message, Formatting.Indented));
-                                }
-                                else
-                                {
-                                    getaasxFile_destination = _I40IM.frame.sender.identification.id;
-                                    getaasxFile_fileName = Path.GetFileName(Program.envFileName[aasIndex]);
-                                    getaasxFile_fileData = binaryBase64;
-                                    getaasxFile_fileType = "getaasxFile";
-                                    getaasxFile_fileLenBase64 = getaasxFile_fileData.Length;
-                                    getaasxFile_fileLenBinary = binaryFile.Length;
-                                    getaasxFile_fileTransmitted = 0;
-                                }
-                            }
-
-                            if (_I40IM.frame.type == "submodel")
-                            {
-                                foreach (string sm in _I40IM.interactionElements)
+                                foreach (string sm in jObject["frame"]["interactionElements"])
                                 {
                                     AdminShell.Submodel submodel = null;
                                     try
@@ -1254,7 +1259,6 @@ namespace AasxServer
 
 
                                             }
-
                                             if (toSubscribe)
                                             {
                                                 Console.WriteLine("Subscribe Submodel " + submodel.idShort);
@@ -1276,7 +1280,6 @@ namespace AasxServer
                                                         k++;
                                                     }
                                                 }
-
                                                 bool overwrite = true;
                                                 int escount = existingSm.submodelElements.Count;
                                                 int count2 = submodel.submodelElements.Count;
@@ -1304,7 +1307,6 @@ namespace AasxServer
                                                         smi++;
                                                     }
                                                 }
-
                                                 if (!overwrite)
                                                 {
                                                     env[envi].AasEnv.Submodels.Remove(existingSm);
@@ -1326,23 +1328,32 @@ namespace AasxServer
                                 }
                             }
 
-                            // i40language
-                            /*
-                            if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
+                            else
                             {
-                                foreach (string s in td2.publish)
-                                {
-                                    i40LanguageRuntime.receivedFrameJSONRequester.Add(JsonConvert.DeserializeObject<string>(s));
-                                }
+                                I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
+                                newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Bidding>(im);
+                                Console.WriteLine(newBiddingMessage);
+                                Console.WriteLine(newBiddingMessage.interactionElements[0]);
+                                /*
+                                                                if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
+                                                                {
+                                                                    foreach (string s in td2.publish)
+                                                                    {
+                                                                        i40LanguageRuntime.receivedFrameJSONRequester.Add(JsonConvert.DeserializeObject<string>(s));
+                                                                    }
+                                                                }
+                                                                if (i40LanguageRuntime.isProvider && td2.type == "i40LanguageRuntime.sendFrameJSONRequester")
+                                                                {
+                                                                    foreach (string s in td2.publish)
+                                                                    {
+                                                                        i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
+                                                                    }
+                                                                }
+                                */
                             }
-                            if (i40LanguageRuntime.isProvider && td2.type == "i40LanguageRuntime.sendFrameJSONRequester")
-                            {
-                                foreach (string s in td2.publish)
-                                {
-                                    i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
-                                }
-                            }
-                            */
+/* 
+*/
+
                         }
                     }
                     catch
@@ -1362,6 +1373,7 @@ namespace AasxServer
                     Thread.Sleep(connectUpdateRate);
             }
         }
+
 
         private static System.Timers.Timer OPCClientTimer;
         static bool timerSet = false;
