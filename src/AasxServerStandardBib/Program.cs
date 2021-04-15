@@ -1101,6 +1101,7 @@ namespace AasxServer
                                 Console.WriteLine("received getDirectory");
                                 getDirectory = true;
                                 getDirectoryDestination = (string)jObject["frame"]["sender"]["identification"]["id"];
+                                continue;
                             }
 
                             if (messageType == "getaasx")
@@ -1144,8 +1145,9 @@ namespace AasxServer
                                         getaasxFile_fileTransmitted = 0;
                                     }
                                 }
-
+                                continue;
                             }
+
                             if (messageType == "getaasxstream")
                             {
                                 string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
@@ -1185,6 +1187,7 @@ namespace AasxServer
                                         getaasxFile_fileTransmitted = 0;
                                     }
                                 }
+                                continue;
                             }
                             if (messageType == "submodel")
                             {
@@ -1326,34 +1329,33 @@ namespace AasxServer
                                         }
                                     }
                                 }
+                                continue;
                             }
 
-                            else
+                            // I40 Message
+                            I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
+                            newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Bidding>(im);
+                            Console.WriteLine(newBiddingMessage);
+                            Console.WriteLine(newBiddingMessage.interactionElements[0]);
+
+                            i40LanguageRuntime.receivedFrameJSONProvider.Add(im);
+
+                            /*
+                            if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
                             {
-                                I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
-                                newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Bidding>(im);
-                                Console.WriteLine(newBiddingMessage);
-                                Console.WriteLine(newBiddingMessage.interactionElements[0]);
-                                /*
-                                                                if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
-                                                                {
-                                                                    foreach (string s in td2.publish)
-                                                                    {
-                                                                        i40LanguageRuntime.receivedFrameJSONRequester.Add(JsonConvert.DeserializeObject<string>(s));
-                                                                    }
-                                                                }
-                                                                if (i40LanguageRuntime.isProvider && td2.type == "i40LanguageRuntime.sendFrameJSONRequester")
-                                                                {
-                                                                    foreach (string s in td2.publish)
-                                                                    {
-                                                                        i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
-                                                                    }
-                                                                }
-                                */
+                                foreach (string s in td2.publish)
+                                {
+                                    i40LanguageRuntime.receivedFrameJSONRequester.Add(JsonConvert.DeserializeObject<string>(s));
+                                }
                             }
-                            /* 
+                            if (i40LanguageRuntime.isProvider && td2.type == "i40LanguageRuntime.sendFrameJSONRequester")
+                            {
+                                foreach (string s in td2.publish)
+                                {
+                                    i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
+                                }
+                            }
                             */
-
                         }
                     }
                     catch

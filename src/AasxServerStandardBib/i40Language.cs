@@ -780,6 +780,8 @@ namespace AasxServer
                 receivedFrameJSON.value = receivedFrame;
 
                 AdminShell.Submodel submodel = null;
+                I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
+
                 if (receivedFrame != "")
                 {
                     try
@@ -789,6 +791,11 @@ namespace AasxServer
                             int i = 0; // set breakpoint here to debug specific automaton
                         }
 
+                        newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Bidding>(
+                            receivedFrame, new AdminShellConverters.JsonAasxConverter("modelType", "name"));
+
+                        submodel = newBiddingMessage.interactionElements[0];
+                        /*
                         JObject parsed = JObject.Parse(receivedFrame);
                         foreach (JProperty jp1 in (JToken)parsed)
                         {
@@ -805,6 +812,7 @@ namespace AasxServer
                                 }
                             }
                         }
+                        */
                     }
                     catch
                     {
@@ -813,6 +821,11 @@ namespace AasxServer
 
                 if (submodel != null)
                 {
+                    if (submodel.idShort == "BoringSubmodel")
+                    {
+                        boringSubmodel = submodel;
+                        boringSubmodelFrame = newBiddingMessage.frame;
+                    }
                     AdminShell.SubmodelElementCollection smcSubmodel = new AdminShell.SubmodelElementCollection();
                     smcSubmodel.idShort = submodel.idShort;
                     foreach (var sme in submodel.submodelElements)
@@ -826,6 +839,9 @@ namespace AasxServer
 
             return true;
         }
+
+        public static AdminShell.Submodel boringSubmodel = null;
+        public static I40TransmitFrame boringSubmodelFrame = null;
 
         public static bool isRequester = false;
         public static bool isProvider = false;
@@ -889,6 +905,7 @@ namespace AasxServer
             if (protocol.value != "memory" && protocol.value != "connect")
                 return false;
 
+            /*
             int frameCount = refFrame.value.Count;
             string frame = "{ \"frame\": { ";
             foreach (var smew in refFrame.value)
@@ -913,6 +930,39 @@ namespace AasxServer
             }
             frame += " } }";
             sendFrameJSON.value = frame;
+            */
+
+            if (boringSubmodel == null)
+                return false;
+
+            I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
+            newBiddingMessage.frame = new I40TransmitFrame();
+            newBiddingMessage.frame.semanticProtocol = new I40SemanticProtocol();
+            newBiddingMessage.frame.sender = new I40EndPointID();
+            newBiddingMessage.frame.sender.identification = new I40Identification();
+            newBiddingMessage.frame.sender.role = new I40role();
+
+            var i40SemanticKey = new I40SemanticKey();
+            i40SemanticKey.type = "GlobalReference";
+            i40SemanticKey.local = "local";
+            i40SemanticKey.value = "ovgu.de/www.admin-shell.io/interaction/bidding";
+            i40SemanticKey.idType = "false";
+            newBiddingMessage.frame.semanticProtocol.keys.Add(i40SemanticKey);
+            newBiddingMessage.frame.type = "proposal";
+            newBiddingMessage.frame.messageId = boringSubmodelFrame.messageId;
+            newBiddingMessage.frame.sender.identification.id = "aorzelski_BoringProvider";
+            newBiddingMessage.frame.sender.identification.idType = "URI";
+            newBiddingMessage.frame.sender.role.name = "BoringProvider";
+            newBiddingMessage.frame.replyBy = "RESTAPI";
+            newBiddingMessage.frame.replyTo = "MQTT";
+            newBiddingMessage.frame.conversationId = boringSubmodelFrame.conversationId;
+            newBiddingMessage.frame.receiver = boringSubmodelFrame.sender;
+
+            newBiddingMessage.interactionElements.Add(boringSubmodel);
+
+            string frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
+
+            boringSubmodel = null;
 
             // Console.WriteLine(frame);
 
