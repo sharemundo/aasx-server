@@ -1097,12 +1097,12 @@ namespace AasxServer
                             JObject jObject = JObject.Parse(im);
                             string messageType = (string)jObject["frame"]["type"];
                             if (messageType == "getDirectory")
-                                  {
-                                      Console.WriteLine("received getDirectory");
-                                      getDirectory = true;
-                                      getDirectoryDestination = (string)jObject["frame"]["sender"]["identification"]["id"];
+                            {
+                                Console.WriteLine("received getDirectory");
+                                getDirectory = true;
+                                getDirectoryDestination = (string)jObject["frame"]["sender"]["identification"]["id"];
                             }
-                            
+
                             if (messageType == "getaasx")
                             {
                                 string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
@@ -1146,7 +1146,7 @@ namespace AasxServer
                                 }
 
                             }
-                            if (messageType == "getaasxstream"  )
+                            if (messageType == "getaasxstream")
                             {
                                 string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
                                 if (receiverId == connectNodeName)
@@ -1351,8 +1351,8 @@ namespace AasxServer
                                                                 }
                                 */
                             }
-/* 
-*/
+                            /* 
+                            */
 
                         }
                     }
