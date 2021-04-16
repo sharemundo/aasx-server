@@ -836,6 +836,7 @@ namespace AasxServer
         public static List<string> receivedFrameJSONProvider = new List<string>();
         public static List<string> sendFrameJSONProvider = new List<string>();
         public static List<string> receivedFrameJSONRequester = new List<string>();
+
         public static bool operation_sendFrame(AdminShell.Operation op, i40LanguageAutomaton auto)
         {
             // inputVariable property protocol: memory, connect
@@ -890,15 +891,17 @@ namespace AasxServer
 
             if (boringSubmodel == null)
                 return false;
+
             I40MessageHelper _i40MessageHelper = new I40MessageHelper();
             I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
-                        boringSubmodelFrame.sender.identification.id,
-                        boringSubmodelFrame.sender.role.name, "BoringProvider", "proposal",
-                        "RESTAPI", boringSubmodelFrame.replyBy);
+                boringSubmodelFrame.sender.identification.id,
+                boringSubmodelFrame.sender.role.name, "BoringProvider", "proposal",
+                "RESTAPI", boringSubmodelFrame.replyBy);
 
             newBiddingMessage.interactionElements.Add(boringSubmodel);
 
             string frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
+            sendFrameJSON.value = frame;
 
             boringSubmodel = null;
 

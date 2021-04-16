@@ -18,7 +18,7 @@
     },
     "AasxServerBlazor": {
       "commandName": "Project",
-      "commandLineArgs": "--rest --data-path C:\\Users\\pakala\\Downloads\\AW__AASX_Registry --connect --name aorzelski.i401 --edit",
+      "commandLineArgs": "--rest --data-path C:\\Development\\I40Language --connect --name aorzelski.i40 --edit",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
