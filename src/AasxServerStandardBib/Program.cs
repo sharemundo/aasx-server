@@ -128,7 +128,7 @@ namespace AasxServer
         static bool runOPC = false;
 
         public static string connectServer = "";
-        static string connectNodeName = "";
+        public static string connectNodeName = "";
         static int connectUpdateRate = 1000;
         static Thread connectThread;
         static bool connectLoop = false;
@@ -967,7 +967,8 @@ namespace AasxServer
 
                     I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
                                                                                         getaasxFile_destination,
-                                                                                        "AASxReceiver", "AASxSender", "getaasxBlock");
+                                                                                        "AASxReceiver", "AASxSender", "getaasxBlock",
+                                                                                        "RESTAPI", "RESTAPI");
 
 
                     getaasxI40Message.interactionElements.Add(responseJson);
@@ -1029,7 +1030,8 @@ namespace AasxServer
                                 var json = JsonConvert.SerializeObject(sm, Newtonsoft.Json.Formatting.Indented);
                                 I40Message getSubmodeI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
                                                                                         "SubmodelReceiver",
-                                                                                        "AASxReceiver", "AASxSender", "submodel");
+                                                                                        "AASxReceiver", "AASxSender", "submodel",
+                                                                                        "RESTAPI", "RESTAPI");
 
                                 getSubmodeI40Message.interactionElements.Add(json);
                                 _i40MessageFrame.interactionElements.Add(JsonConvert.SerializeObject(getSubmodeI40Message, Newtonsoft.Json.Formatting.Indented));
@@ -1123,7 +1125,7 @@ namespace AasxServer
 
                                     I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(connectNodeName,
                                                                                             (string)jObject["frame"]["sender"]["identification"]["id"],
-                                                                                            (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile");
+                                                                                            (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile", "RESTAPI", "RESTAPI");
                                     if (fileToken.Length <= blockSize)
                                     {
                                         res.fileName = Path.GetFileName(Program.envFileName[aasIndex]);
@@ -1148,7 +1150,7 @@ namespace AasxServer
                                 continue;
                             }
 
-                            if (messageType == "getaasxstream")
+                            else if (messageType == "getaasxstream")
                             {
                                 string receiverId = (string)jObject["frame"]["receiver"]["identification"]["id"];
                                 if (receiverId == connectNodeName)
@@ -1170,7 +1172,8 @@ namespace AasxServer
 
                                         I40Message getaasxI40Message = _i40MessageHelper.createInteractionMessage(
                                             connectNodeName, (string)jObject["frame"]["sender"]["identification"]["id"],
-                                            (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile");
+                                            (string)jObject["frame"]["sender"]["role"]["name"], "AASxSender", "getaasxFile",
+                                            "RESTAPI", "RESTAPI");
 
                                         getaasxI40Message.interactionElements.Add(responseJson);
 
@@ -1189,7 +1192,7 @@ namespace AasxServer
                                 }
                                 continue;
                             }
-                            if (messageType == "submodel")
+                            else if (messageType == "submodel")
                             {
                                 foreach (string sm in jObject["frame"]["interactionElements"])
                                 {
@@ -1331,31 +1334,13 @@ namespace AasxServer
                                 }
                                 continue;
                             }
-
-                            // I40 Message
-                            I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
-                            newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Bidding>(im);
-                            Console.WriteLine(newBiddingMessage);
-                            Console.WriteLine(newBiddingMessage.interactionElements[0]);
-
-                            i40LanguageRuntime.receivedFrameJSONProvider.Add(im);
-
-                            /*
-                            if (i40LanguageRuntime.isRequester && td2.type == "i40LanguageRuntime.sendFrameJSONProvider")
+                            else
                             {
-                                foreach (string s in td2.publish)
-                                {
-                                    i40LanguageRuntime.receivedFrameJSONRequester.Add(JsonConvert.DeserializeObject<string>(s));
-                                }
+                                Console.WriteLine("Call for proposal Received.");
+                                I40Message_Interaction newBiddingMessage = new I40Message_Interaction();
+                                newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(im);
+                                i40LanguageRuntime.receivedFrameJSONProvider.Add(im);
                             }
-                            if (i40LanguageRuntime.isProvider && td2.type == "i40LanguageRuntime.sendFrameJSONRequester")
-                            {
-                                foreach (string s in td2.publish)
-                                {
-                                    i40LanguageRuntime.receivedFrameJSONProvider.Add(JsonConvert.DeserializeObject<string>(s));
-                                }
-                            }
-                            */
                         }
                     }
                     catch

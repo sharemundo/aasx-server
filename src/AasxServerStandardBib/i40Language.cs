@@ -780,7 +780,7 @@ namespace AasxServer
                 receivedFrameJSON.value = receivedFrame;
 
                 AdminShell.Submodel submodel = null;
-                I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
+                I40Message_Interaction newBiddingMessage = new I40Message_Interaction();
 
                 if (receivedFrame != "")
                 {
@@ -791,28 +791,11 @@ namespace AasxServer
                             int i = 0; // set breakpoint here to debug specific automaton
                         }
 
-                        newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Bidding>(
+                        newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(
                             receivedFrame, new AdminShellConverters.JsonAasxConverter("modelType", "name"));
 
                         submodel = newBiddingMessage.interactionElements[0];
-                        /*
-                        JObject parsed = JObject.Parse(receivedFrame);
-                        foreach (JProperty jp1 in (JToken)parsed)
-                        {
-                            if (jp1.Name == "frame")
-                            {
-                                foreach (JProperty jp2 in jp1.Value)
-                                {
-                                    if (jp2.Name == "submodel")
-                                    {
-                                        string text = jp2.Value.ToString();
-                                        submodel = JsonConvert.DeserializeObject<AdminShell.Submodel>(text,
-                                            new AdminShellConverters.JsonAasxConverter("modelType", "name"));
-                                    }
-                                }
-                            }
-                        }
-                        */
+
                     }
                     catch
                     {
@@ -905,58 +888,13 @@ namespace AasxServer
             if (protocol.value != "memory" && protocol.value != "connect")
                 return false;
 
-            /*
-            int frameCount = refFrame.value.Count;
-            string frame = "{ \"frame\": { ";
-            foreach (var smew in refFrame.value)
-            {
-                var sme = smew.submodelElement;
-                if (sme.idShort == "_insert_submodel_into_frame")
-                {
-                    frame += "\"" + "submodel" + "\" : ";
-                    var smJson = JsonConvert.SerializeObject(refSubmodel, Newtonsoft.Json.Formatting.Indented);
-                    frame += smJson;
-                }
-                else
-                {
-                    frame += "\"" + sme.idShort + "\" : ";
-                    if (sme is AdminShell.Property)
-                        frame += "\"" + (sme as AdminShell.Property).value + "\"";
-                    else
-                        frame += "\"\"";
-                }
-                if (frameCount-- != 1)
-                    frame += ",";
-            }
-            frame += " } }";
-            sendFrameJSON.value = frame;
-            */
-
             if (boringSubmodel == null)
                 return false;
-
-            I40Message_Bidding newBiddingMessage = new I40Message_Bidding();
-            newBiddingMessage.frame = new I40TransmitFrame();
-            newBiddingMessage.frame.semanticProtocol = new I40SemanticProtocol();
-            newBiddingMessage.frame.sender = new I40EndPointID();
-            newBiddingMessage.frame.sender.identification = new I40Identification();
-            newBiddingMessage.frame.sender.role = new I40role();
-
-            var i40SemanticKey = new I40SemanticKey();
-            i40SemanticKey.type = "GlobalReference";
-            i40SemanticKey.local = "local";
-            i40SemanticKey.value = "ovgu.de/www.admin-shell.io/interaction/bidding";
-            i40SemanticKey.idType = "false";
-            newBiddingMessage.frame.semanticProtocol.keys.Add(i40SemanticKey);
-            newBiddingMessage.frame.type = "proposal";
-            newBiddingMessage.frame.messageId = boringSubmodelFrame.messageId;
-            newBiddingMessage.frame.sender.identification.id = "aorzelski_BoringProvider";
-            newBiddingMessage.frame.sender.identification.idType = "URI";
-            newBiddingMessage.frame.sender.role.name = "BoringProvider";
-            newBiddingMessage.frame.replyBy = "RESTAPI";
-            newBiddingMessage.frame.replyTo = "MQTT";
-            newBiddingMessage.frame.conversationId = boringSubmodelFrame.conversationId;
-            newBiddingMessage.frame.receiver = boringSubmodelFrame.sender;
+            I40MessageHelper _i40MessageHelper = new I40MessageHelper();
+            I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
+                        boringSubmodelFrame.sender.identification.id,
+                        boringSubmodelFrame.sender.role.name, "BoringProvider", "proposal",
+                        "RESTAPI", boringSubmodelFrame.replyBy);
 
             newBiddingMessage.interactionElements.Add(boringSubmodel);
 
