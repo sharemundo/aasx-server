@@ -817,6 +817,7 @@ namespace AasxServer
                         treeChanged = true;
                     }
                     smc2.Add(smcSubmodel);
+
                 }
             }
 
@@ -837,6 +838,15 @@ namespace AasxServer
         public static List<string> sendFrameJSONProvider = new List<string>();
         public static List<string> receivedFrameJSONRequester = new List<string>();
 
+        public static AdminShell.Submodel returnBoringSbmodel()
+        {
+            AdminShell.Identification _boringSMID = new AdminShell.Identification();
+            _boringSMID.id = "www.company.com/ids/sm/3145_4121_8002_1792";
+            _boringSMID.idType = "IRI";
+            AdminShell.Submodel _boringSubmodel = new AdminShell.Submodel();
+            _boringSubmodel = Program.env[0].AasEnv.FindSubmodel(_boringSMID);
+            return Program.env[0].AasEnv.FindSubmodel(_boringSMID);
+        }
         public static bool operation_sendFrame(AdminShell.Operation op, i40LanguageAutomaton auto)
         {
             // inputVariable property protocol: memory, connect
@@ -875,7 +885,6 @@ namespace AasxServer
                 if (refElement is AdminShell.Submodel)
                     refSubmodel = refElement as AdminShell.Submodel;
             }
-
             foreach (var output in op.outputVariable)
             {
                 var outputRef = output.value.submodelElement;
@@ -891,14 +900,17 @@ namespace AasxServer
 
             if (boringSubmodel == null)
                 return false;
-
             I40MessageHelper _i40MessageHelper = new I40MessageHelper();
             I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
                 boringSubmodelFrame.sender.identification.id,
                 boringSubmodelFrame.sender.role.name, "BoringProvider", "proposal",
-                "RESTAPI", boringSubmodelFrame.replyBy);
+                "RESTAPI", boringSubmodelFrame.replyBy, boringSubmodelFrame.conversationId, Program.count);
 
-            newBiddingMessage.interactionElements.Add(boringSubmodel);
+            Program.count = Program.count + 1;
+
+            AdminShell.Submodel _boringSubmodel = new AdminShell.Submodel();
+            _boringSubmodel = returnBoringSbmodel();
+            newBiddingMessage.interactionElements.Add(_boringSubmodel);
 
             string frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
             sendFrameJSON.value = frame;

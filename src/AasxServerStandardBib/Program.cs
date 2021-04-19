@@ -151,6 +151,7 @@ namespace AasxServer
 
         public static object changeAasxFile = new object();
 
+        public static int count = 0;
         private class CommandLineArguments
 
         {
@@ -180,6 +181,7 @@ namespace AasxServer
             {
                 if (a.Connect.Length == 0)
                 {
+                    //Program.connectServer = "http://localhost:9021";
                     Program.connectServer = "http://liabroker.ddns.net:9021";
                     // Program.connectServer = "https://admin-shell-io.com:9022";
                     Byte[] barray = new byte[10];
@@ -1093,7 +1095,6 @@ namespace AasxServer
                         /* TransmitFrame tf2 = new TransmitFrame(); */
                         I40Message _I40Response = new I40Message();
                         _I40Response = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message>(content);
-
                         foreach (String im in _I40Response.interactionElements)
                         {
                             JObject jObject = JObject.Parse(im);
@@ -1336,7 +1337,8 @@ namespace AasxServer
                             }
                             else
                             {
-                                Console.WriteLine("Call for proposal Received.");
+                                Console.WriteLine("Bidding Protocol Message  Received.");
+                                Console.WriteLine(messageType);
                                 I40Message_Interaction newBiddingMessage = new I40Message_Interaction();
                                 newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(im);
                                 i40LanguageRuntime.receivedFrameJSONProvider.Add(im);

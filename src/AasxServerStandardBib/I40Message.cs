@@ -96,7 +96,7 @@ namespace AasxServer
             sender.role = seRole;
             i40Frame.sender = sender;
 
-            reID.id = "VWS_AAS_Registry";
+            reID.id = "VWS_RIC";
             reID.idType = "idShort";
             reRole.name = "ConnectProtocol";
             receiver.identification = reID;
@@ -113,6 +113,7 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
+            i40Frame.messageId = connectNodeName + 1;
 
             _i40Message.frame = i40Frame;
 
@@ -141,7 +142,7 @@ namespace AasxServer
             sender.role = seRole;
             i40Frame.sender = sender;
 
-            reID.id = "VWS_AAS_Registry";
+            reID.id = "VWS_RIC";
             reID.idType = "idShort";
             reRole.name = "RegistryHandler";
             receiver.identification = reID;
@@ -158,7 +159,7 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
-
+            i40Frame.messageId = connectNodeName + 1;
             _i40Message.frame = i40Frame;
 
             return _i40Message;
@@ -206,7 +207,7 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
-
+            i40Frame.messageId = connectNodeName + "1";
             _i40Message.frame = i40Frame;
 
             return _i40Message;
@@ -215,7 +216,7 @@ namespace AasxServer
 
         public I40Message_Interaction createBiddingMessage(string connectNodeName,
                        string receiverId, string receiverRole, string senderRole, string messageType,
-                       string replyBy, string replyTo)
+                       string replyBy, string replyTo, string conversationId, int messageCount)
         {
             I40Message_Interaction _i40Message = new I40Message_Interaction();
             I40TransmitFrame i40Frame = new I40TransmitFrame();
@@ -255,7 +256,8 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
-
+            i40Frame.conversationId = conversationId;
+            i40Frame.messageId = "AASXServerConnect" + messageCount.ToString();
             _i40Message.frame = i40Frame;
 
             return _i40Message;

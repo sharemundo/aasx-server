@@ -10,7 +10,7 @@
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
-      "commandLineArgs": "-rest -datapath C:\\Users\\pakala\\Downloads\\AW__AASX_Registry --edit --connect http://liabroker.ddns.net:9021,aasx4,1000",
+      "commandLineArgs": "--rest --data-path C:\\Users\\pakala\\Downloads\\AW__AASX_Registry\\3 --connect  http://localhost:9021,test_ovgu,1000 --name Test_OVGU --edit",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
@@ -18,7 +18,7 @@
     },
     "AasxServerBlazor": {
       "commandName": "Project",
-      "commandLineArgs": "--rest --data-path C:\\Development\\I40Language --connect --name aorzelski.i40 --edit",
+      "commandLineArgs": "--rest --data-path C:\\Users\\pakala\\Downloads\\AW__AASX_Registry\\3 --connect --name aorzelski.i401 --edit",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
