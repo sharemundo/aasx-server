@@ -429,6 +429,9 @@ namespace AasxServer
                                                     case "receiveProposals":
                                                         opResult = operation_receiveProposals(op, auto);
                                                         break;
+                                                    case "receiveSRAnswer":
+                                                        opResult = operation_receiveSRAnswer(op, auto);
+                                                        break;
                                                     default:
                                                         transitionsActive.Add(t.idShort);
                                                         break;
@@ -482,6 +485,9 @@ namespace AasxServer
                                                         break;
                                                     case "sendFrame":
                                                         opResult = operation_sendFrame(op, auto);
+                                                        break;
+                                                    case "processRequesterResponse":
+                                                        opResult = operation_processRequesterResponse(op, auto);
                                                         break;
                                                 }
                                             }
@@ -728,7 +734,6 @@ namespace AasxServer
                 if (refElement is AdminShell.Submodel)
                     refSubmodel = refElement as AdminShell.Submodel;
             }
-
             foreach (var output in op.outputVariable)
             {
                 var outputRef = output.value.submodelElement;
@@ -750,7 +755,6 @@ namespace AasxServer
 
             if (protocol.value != "memory" && protocol.value != "connect")
                 return false;
-
             while ((auto.name == "automatonServiceRequester" && receivedFrameJSONRequester.Count != 0)
                     || (auto.name == "automatonServiceProvider" && receivedFrameJSONProvider.Count != 0))
             {
@@ -780,7 +784,6 @@ namespace AasxServer
                 receivedFrameJSON.value = receivedFrame;
 
                 AdminShell.Submodel submodel = null;
-                I40Message_Interaction newBiddingMessage = new I40Message_Interaction();
 
                 if (receivedFrame != "")
                 {
@@ -791,10 +794,28 @@ namespace AasxServer
                             int i = 0; // set breakpoint here to debug specific automaton
                         }
 
-                        newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(
+                        I40Message_Interaction newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(
                             receivedFrame, new AdminShellConverters.JsonAasxConverter("modelType", "name"));
 
                         submodel = newBiddingMessage.interactionElements[0];
+                        Console.WriteLine("A new Call for Proposal is received");
+                        if (submodel != null)
+                        {
+                            if (submodel.idShort == "Boring")
+                            {
+                                boringSubmodel = submodel;
+                                boringSubmodelFrame = newBiddingMessage.frame;
+                            }
+                            AdminShell.SubmodelElementCollection smcSubmodel = new AdminShell.SubmodelElementCollection();
+                            smcSubmodel.idShort = submodel.idShort;
+                            foreach (var sme in submodel.submodelElements)
+                            {
+                                smcSubmodel.Add(sme.submodelElement);
+                                treeChanged = true;
+                            }
+                            smc2.Add(smcSubmodel);
+
+                        }
 
                     }
                     catch
@@ -802,27 +823,68 @@ namespace AasxServer
                     }
                 }
 
-                if (submodel != null)
-                {
-                    if (submodel.idShort == "BoringSubmodel")
-                    {
-                        boringSubmodel = submodel;
-                        boringSubmodelFrame = newBiddingMessage.frame;
-                    }
-                    AdminShell.SubmodelElementCollection smcSubmodel = new AdminShell.SubmodelElementCollection();
-                    smcSubmodel.idShort = submodel.idShort;
-                    foreach (var sme in submodel.submodelElements)
-                    {
-                        smcSubmodel.Add(sme.submodelElement);
-                        treeChanged = true;
-                    }
-                    smc2.Add(smcSubmodel);
-
-                }
             }
 
             return true;
         }
+        
+        public static bool operation_receiveSRAnswer(AdminShell.Operation op, i40LanguageAutomaton auto)
+        {
+            // inputVariable property protocol: memory, connect
+            // inputVariable reference frame proposal: collection
+            // inputVariable reference submodel
+            // outputVariable reference collected proposals: collection
+            // outputVariable reference collected not understood proposals: collection
+            // outputVariable reference collected refused proposals: collection
+            // outputVariable reference property receivedFrameJSON
+
+            if (auto.name == debugAutomaton)
+            {
+                int i = 0; // set breakpoint here to debug specific automaton
+            }
+
+            Console.WriteLine("Waiting for Service Requester Answer");
+
+            while  (auto.name == "automatonServiceProvider" && receivedFrameJSONProvider.Count != 0)
+            {
+                string receivedFrame = "";
+
+                if (auto.name == "automatonServiceProvider")
+                {
+                    // receivedFrame = sendFrameJSONRequester;
+                    // sendFrameJSONRequester = "";
+                    if (receivedFrameJSONProvider.Count != 0)
+                    {
+                        receivedFrame = receivedFrameJSONProvider[0];
+                        receivedFrameJSONProvider.RemoveAt(0);
+                    }
+                }
+                if (receivedFrame != "")
+                {
+                    try
+                    {
+                        if (auto.name == debugAutomaton)
+                        {
+                            int i = 0; // set breakpoint here to debug specific automaton
+                        }
+
+                        I40Message_Interaction newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(
+                            receivedFrame, new AdminShellConverters.JsonAasxConverter("modelType", "name"));
+
+                        srAnswerMessageType = newBiddingMessage.frame.type;
+
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                
+            }
+
+            return true;
+        }
+
 
         public static AdminShell.Submodel boringSubmodel = null;
         public static I40TransmitFrame boringSubmodelFrame = null;
@@ -833,11 +895,11 @@ namespace AasxServer
         public static string sendProtocolProvider = "";
         public static string receiveProtocolRequester = "";
         public static string receiveProtocolProvider = "";
-        public static List<string> sendFrameJSONRequester = new List<string>();
+        public static List<string> sendFrameJSONRequester = new List<string>(); 
         public static List<string> receivedFrameJSONProvider = new List<string>();
         public static List<string> sendFrameJSONProvider = new List<string>();
         public static List<string> receivedFrameJSONRequester = new List<string>();
-
+        public static string srAnswerMessageType = "";
         public static AdminShell.Submodel returnBoringSbmodel()
         {
             AdminShell.Identification _boringSMID = new AdminShell.Identification();
@@ -944,6 +1006,40 @@ namespace AasxServer
                 }
             }
 
+            return true;
+        }
+
+        public static bool operation_processRequesterResponse(AdminShell.Operation op, i40LanguageAutomaton auto)
+        {
+            // inputVariable property protocol: memory, connect
+            // inputVariable reference frame proposal: collection
+            // inputVariable reference submodel
+            // outputVariable reference property sendFrameJSON
+
+            if (auto.name == debugAutomaton)
+            {
+                int i = 0; // set breakpoint here to debug specific automaton
+            }
+            if (srAnswerMessageType == "acceptProposal")
+            {
+                Console.WriteLine("The Service requester has sent the accept proposal");
+                I40MessageHelper _i40MessageHelper = new I40MessageHelper();
+                I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
+                    boringSubmodelFrame.sender.identification.id,
+                    boringSubmodelFrame.sender.role.name, "BoringProvider", "informConfirm",
+                    "RESTAPI", boringSubmodelFrame.replyBy, boringSubmodelFrame.conversationId, Program.count);
+
+                Program.count = Program.count + 1;
+                    
+                string frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
+                sendFrameJSONProvider.Add(frame);
+                Console.WriteLine("The informConfirm is sent to the service Requesters");
+
+            }
+            else if (srAnswerMessageType == "rejectProposal")
+            {
+                Console.WriteLine("The Service requester has sent the reject proposal");
+            }
             return true;
         }
 

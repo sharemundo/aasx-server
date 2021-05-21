@@ -181,8 +181,8 @@ namespace AasxServer
             {
                 if (a.Connect.Length == 0)
                 {
-                    //Program.connectServer = "http://localhost:9021";
-                    Program.connectServer = "http://liabroker.ddns.net:9021";
+                    Program.connectServer = "http://localhost:9021";
+                    //Program.connectServer = "http://liabroker.ddns.net:9021";
                     // Program.connectServer = "https://admin-shell-io.com:9022";
                     Byte[] barray = new byte[10];
                     RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
@@ -762,19 +762,15 @@ namespace AasxServer
         public class SubmodelDescriptors
         {
             [XmlElement(ElementName = "administration")]
-            [JsonIgnore]
             public AdminShell.Administration administration = null;
 
             [XmlElement(ElementName = "description")]
-            [JsonIgnore]
             public AdminShell.Description description = null;
 
             [XmlElement(ElementName = "idShort")]
-            [JsonIgnore]
             public string idShort = "";
 
             [XmlElement(ElementName = "identification")]
-            [JsonIgnore]
             public AdminShell.Identification identification = null;
 
             [XmlElement(ElementName = "semanticId")]
@@ -788,18 +784,15 @@ namespace AasxServer
         {
 
             [XmlElement(ElementName = "administration")]
-            [JsonIgnore]
             public AdminShell.Administration administration = null;
 
             [XmlElement(ElementName = "description")]
-            [JsonIgnore]
             public AdminShell.Description description = new AdminShell.Description();
 
             [XmlElement(ElementName = "idShort")]
             public string idShort = "";
 
             [XmlElement(ElementName = "identification")]
-            [JsonIgnore]
             public AdminShell.Identification identification = null;
 
             [XmlElement(ElementName = "assets")]
@@ -1335,18 +1328,33 @@ namespace AasxServer
                                 }
                                 continue;
                             }
-                            else
+                            else if (messageType == "callForProposal")
                             {
                                 Console.WriteLine("Bidding Protocol Message  Received.");
                                 Console.WriteLine(messageType);
                                 I40Message_Interaction newBiddingMessage = new I40Message_Interaction();
                                 newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(im);
                                 i40LanguageRuntime.receivedFrameJSONProvider.Add(im);
+                                Console.WriteLine(i40LanguageRuntime.receivedFrameJSONProvider.Count);
+                            }
+                            else if (messageType == "acceptProposal" || messageType == "rejectProposal")
+                            {
+                                Console.WriteLine("The " + messageType + " is received");
+                                I40Message_Interaction newBiddingMessage = new I40Message_Interaction();
+                                newBiddingMessage = Newtonsoft.Json.JsonConvert.DeserializeObject<I40Message_Interaction>(im);
+                                i40LanguageRuntime.receivedFrameJSONProvider.Add(im);
+                                Console.WriteLine(i40LanguageRuntime.receivedFrameJSONProvider.Count);
+                            }
+                            else
+                            {
+                                Console.WriteLine(messageType);
+                                Console.WriteLine("Unknown message received");
                             }
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        Console.WriteLine(e.ToString());
                     }
                     if (newConnectData)
                     {
