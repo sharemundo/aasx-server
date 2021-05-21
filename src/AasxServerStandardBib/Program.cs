@@ -180,7 +180,8 @@ namespace AasxServer
             {
                 if (a.Connect.Length == 0)
                 {
-                    Program.connectServer = "http://admin-shell-io.com:52000";
+                    // Program.connectServer = "http://admin-shell-io.com:52000";
+                    Program.connectServer = "http://liabroker.ddns.net:9021";
                     Byte[] barray = new byte[10];
                     RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
                     rngCsp.GetBytes(barray);

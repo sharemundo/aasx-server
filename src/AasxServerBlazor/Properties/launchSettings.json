@@ -18,7 +18,7 @@
     },
     "AasxServerBlazor": {
       "commandName": "Project",
-      "commandLineArgs": "--rest --data-path C:\\Users\\pakala\\Downloads\\AW__server --connect  http://localhost:9021,test_ovgu,1000 --name Test_OVGU --edit",
+      "commandLineArgs": "--rest --data-path D:\\i40language --connect  --name aorzelski.hp --edit",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
