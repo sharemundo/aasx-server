@@ -1004,7 +1004,7 @@ namespace AasxServer
 
             Console.WriteLine("Waiting for Service Requester Answer");
 
-            while  (auto.name == "automatonServiceProvider" && receivedFrameJSONProvider.Count != 0)
+            while (auto.name == "automatonServiceProvider" && receivedFrameJSONProvider.Count != 0)
             {
                 string receivedFrame = "";
 
@@ -1038,7 +1038,7 @@ namespace AasxServer
                     }
                 }
 
-                
+
             }
 
             return true;
@@ -1054,7 +1054,7 @@ namespace AasxServer
         public static string sendProtocolProvider = "";
         public static string receiveProtocolRequester = "";
         public static string receiveProtocolProvider = "";
-        public static List<string> sendFrameJSONRequester = new List<string>(); 
+        public static List<string> sendFrameJSONRequester = new List<string>();
         public static List<string> receivedFrameJSONProvider = new List<string>();
         public static List<string> sendFrameJSONProvider = new List<string>();
         public static List<string> receivedFrameJSONRequester = new List<string>();
@@ -1236,49 +1236,73 @@ namespace AasxServer
             if (protocol.value != "memory" && protocol.value != "i40connect")
                 return false;
 
-            if (boringSubmodel == null)
-                return false;
-            I40MessageHelper _i40MessageHelper = new I40MessageHelper();
-            I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
-                boringSubmodelFrame.sender.identification.id,
-                boringSubmodelFrame.sender.role.name, "BoringProvider", "proposal",
-                "RESTAPI", boringSubmodelFrame.replyBy, boringSubmodelFrame.conversationId, Program.count);
-
-            Program.count = Program.count + 1;
-
-            AdminShell.Submodel _boringSubmodel = new AdminShell.Submodel();
-            _boringSubmodel = returnBoringSbmodel();
-            newBiddingMessage.interactionElements.Add(_boringSubmodel);
-
-            string frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
-            sendFrameJSON.value = frame;
-
-            boringSubmodel = null;
-
-            // Console.WriteLine(frame);
-
-            if (auto.name == "automatonServiceRequester")
+            string frame = "";
+            if (refSubmodel != null)
             {
-                switch (protocol.value)
+                if (boringSubmodel == null)
+                    return false;
+                I40MessageHelper _i40MessageHelper = new I40MessageHelper();
+                I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
+                    boringSubmodelFrame.sender.identification.id,
+                    boringSubmodelFrame.sender.role.name, "BoringProvider", "proposal",
+                    "RESTAPI", boringSubmodelFrame.replyBy, boringSubmodelFrame.conversationId, Program.count);
+
+                Program.count = Program.count + 1;
+
+                AdminShell.Submodel _boringSubmodel = new AdminShell.Submodel();
+                _boringSubmodel = returnBoringSbmodel();
+                newBiddingMessage.interactionElements.Add(_boringSubmodel);
+
+                frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
+                sendFrameJSON.value = frame;
+
+                boringSubmodel = null;
+            }
+            else
+            {
+                if (messageType.value == "informConfirm")
                 {
-                    case "memory":
-                        receivedFrameJSONProvider.Add(frame);
-                        break;
-                    case "i40connect":
-                        sendFrameJSONRequester.Add(frame);
-                        break;
+                    Console.WriteLine("The Service requester has sent the accept proposal");
+                    I40MessageHelper _i40MessageHelper = new I40MessageHelper();
+                    I40Message_Interaction newBiddingMessage = _i40MessageHelper.createBiddingMessage(Program.connectNodeName,
+                        boringSubmodelFrame.sender.identification.id,
+                        boringSubmodelFrame.sender.role.name, "BoringProvider", "informConfirm",
+                        "RESTAPI", boringSubmodelFrame.replyBy, boringSubmodelFrame.conversationId, Program.count);
+
+                    Program.count = Program.count + 1;
+
+                    frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
+                    sendFrameJSONProvider.Add(frame);
+                    Console.WriteLine("The informConfirm is sent to the service Requesters");
                 }
             }
-            if (auto.name == "automatonServiceProvider")
+
+            // Console.WriteLine(frame);
+            if (frame != "")
             {
-                switch (protocol.value)
+                if (auto.name == "automatonServiceRequester")
                 {
-                    case "memory":
-                        receivedFrameJSONRequester.Add(frame);
-                        break;
-                    case "i40connect":
-                        sendFrameJSONProvider.Add(frame);
-                        break;
+                    switch (protocol.value)
+                    {
+                        case "memory":
+                            receivedFrameJSONProvider.Add(frame);
+                            break;
+                        case "i40connect":
+                            sendFrameJSONRequester.Add(frame);
+                            break;
+                    }
+                }
+                if (auto.name == "automatonServiceProvider")
+                {
+                    switch (protocol.value)
+                    {
+                        case "memory":
+                            receivedFrameJSONRequester.Add(frame);
+                            break;
+                        case "i40connect":
+                            sendFrameJSONProvider.Add(frame);
+                            break;
+                    }
                 }
             }
 
@@ -1306,7 +1330,7 @@ namespace AasxServer
                     "RESTAPI", boringSubmodelFrame.replyBy, boringSubmodelFrame.conversationId, Program.count);
 
                 Program.count = Program.count + 1;
-                    
+
                 string frame = JsonConvert.SerializeObject(newBiddingMessage, Newtonsoft.Json.Formatting.Indented);
                 sendFrameJSONProvider.Add(frame);
                 Console.WriteLine("The informConfirm is sent to the service Requesters");
