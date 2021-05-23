@@ -2,7 +2,7 @@
   "profiles": {
     "AasxServerCore": {
       "commandName": "Project",
-      "commandLineArgs": "--no-security --rest --data-path C:\\Users\\pakala\\Downloads\\AW__AASX_Registry\\2 --connect http://localhost:9021/"
+      "commandLineArgs": "--no-security --rest --data-path C:\\Users\\pakala\\Downloads\\AW__AASX_Registry\\2 --connect http://liabroker.ddns.net:9021,aasx1,1000"
     }
   }
 }

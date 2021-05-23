@@ -60,11 +60,11 @@ namespace AasxServer
 
     }
 
-    public class I40Message_Bidding
+    public class I40Message_Interaction
     {
         public I40TransmitFrame frame;
         public List<AdminShellNS.AdminShell.Submodel> interactionElements;
-        public I40Message_Bidding()
+        public I40Message_Interaction()
         {
             interactionElements = new List<AdminShellNS.AdminShell.Submodel> { };
         }
@@ -96,7 +96,7 @@ namespace AasxServer
             sender.role = seRole;
             i40Frame.sender = sender;
 
-            reID.id = "VWS_AAS_Registry";
+            reID.id = "VWS_RIC";
             reID.idType = "idShort";
             reRole.name = "ConnectProtocol";
             receiver.identification = reID;
@@ -113,6 +113,7 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
+            i40Frame.messageId = connectNodeName + 1;
 
             _i40Message.frame = i40Frame;
 
@@ -141,7 +142,7 @@ namespace AasxServer
             sender.role = seRole;
             i40Frame.sender = sender;
 
-            reID.id = "VWS_AAS_Registry";
+            reID.id = "VWS_RIC";
             reID.idType = "idShort";
             reRole.name = "RegistryHandler";
             receiver.identification = reID;
@@ -158,21 +159,21 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
-
+            i40Frame.messageId = connectNodeName + 1;
             _i40Message.frame = i40Frame;
 
             return _i40Message;
         }
 
-
         public I40Message createInteractionMessage(string connectNodeName,
-                       string receiverId, string receiverRole, string senderRole, string messageType)
+                      string receiverId, string receiverRole, string senderRole, string messageType,
+                      string replyBy, string replyTo)
         {
             I40Message _i40Message = new I40Message();
             I40TransmitFrame i40Frame = new I40TransmitFrame();
             i40Frame.type = messageType;
-            i40Frame.replyBy = "RESTHTTP";
-            i40Frame.replyTo = "RESTHTTP";
+            i40Frame.replyBy = replyBy;
+            i40Frame.replyTo = replyTo;
 
             I40EndPointID sender = new I40EndPointID();
             I40EndPointID receiver = new I40EndPointID();
@@ -206,7 +207,57 @@ namespace AasxServer
             semanticProtocol.keys.Add(i40Key);
 
             i40Frame.semanticProtocol = semanticProtocol;
+            i40Frame.messageId = connectNodeName + "1";
+            _i40Message.frame = i40Frame;
 
+            return _i40Message;
+        }
+
+
+        public I40Message_Interaction createBiddingMessage(string connectNodeName,
+                       string receiverId, string receiverRole, string senderRole, string messageType,
+                       string replyBy, string replyTo, string conversationId, int messageCount)
+        {
+            I40Message_Interaction _i40Message = new I40Message_Interaction();
+            I40TransmitFrame i40Frame = new I40TransmitFrame();
+            i40Frame.type = messageType;
+            i40Frame.replyBy = replyBy;
+            i40Frame.replyTo = replyTo;
+
+            I40EndPointID sender = new I40EndPointID();
+            I40EndPointID receiver = new I40EndPointID();
+            I40Identification seID = new I40Identification();
+            I40role seRole = new I40role();
+
+            I40Identification reID = new I40Identification();
+            I40role reRole = new I40role();
+
+            seID.id = connectNodeName;
+            seID.idType = "idShort";
+            seRole.name = senderRole;
+            sender.identification = seID;
+            sender.role = seRole;
+            i40Frame.sender = sender;
+
+            reID.id = receiverId;
+            reID.idType = "idShort";
+            reRole.name = receiverRole;
+            receiver.identification = reID;
+            receiver.role = reRole;
+            i40Frame.receiver = receiver;
+
+            I40SemanticKey i40Key = new I40SemanticKey();
+            i40Key.type = "AasxConnect";
+            i40Key.local = "local";
+            i40Key.value = "ovgu.de/http://www.vdi.de/gma720/vdi2193_2/bidding";
+            i40Key.idType = "False";
+
+            I40SemanticProtocol semanticProtocol = new I40SemanticProtocol();
+            semanticProtocol.keys.Add(i40Key);
+
+            i40Frame.semanticProtocol = semanticProtocol;
+            i40Frame.conversationId = conversationId;
+            i40Frame.messageId = "AASXServerConnect" + messageCount.ToString();
             _i40Message.frame = i40Frame;
 
             return _i40Message;
