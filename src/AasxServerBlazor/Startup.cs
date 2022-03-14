@@ -47,7 +47,9 @@ namespace AasxServerBlazor
             services.AddSingleton<AASService>();
             services.AddCors();
 
-            services.AddControllers();
+            services.AddControllers(o => o.InputFormatters.Insert(o.InputFormatters.Count, new TextPlainInputFormatter()));
+
+            services.AddTransient<IAASXFileServerInterfaceService, AASXFileServerInterfaceService>();
 
             // Add framework services.
             services
