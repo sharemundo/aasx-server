@@ -47,6 +47,7 @@ namespace AasxServerBlazor
             services.AddServerSideBlazor();
             services.AddSingleton<AASService>();
             services.AddCors();
+            services.AddScoped<BlazorSessionService>();
 
             services.AddControllers();
 
@@ -147,10 +148,11 @@ namespace AasxServerBlazor
             app.UseSwaggerUI(c =>
             {
                 //TODO: Either use the SwaggerGen generated Swagger contract (generated from C# classes)
-                c.SwaggerEndpoint("/swagger/Final-Draft/swagger.json", "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository");
+                c.SwaggerEndpoint("Final-Draft/swagger.json", "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository");
+                c.RoutePrefix = "swagger";
 
                 //TODO: Or alternatively use the original Swagger contract that's included in the static files
-                // c.SwaggerEndpoint("/swagger-original.json", "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository Original");
+                // c.SwaggerEndpoint("swagger-original.json", "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository Original");
             });
 
             app.UseEndpoints(endpoints =>
