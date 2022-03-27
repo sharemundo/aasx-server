@@ -36,7 +36,24 @@ namespace IO.Swagger.Services
             var requestedPackage = _packages[packageIndex];
             if (requestedPackage != null)
             {
+                //Move the file to archive
+                try
+                {
+                    var archivePath = Path.Combine(AasxHttpContextHelper.DataPath, "AasxFileArchive");
+                    if (!Directory.Exists(archivePath))
+                    {
+                        Directory.CreateDirectory(archivePath);
+                    }
+                    var fileName = Path.Combine(archivePath, Path.GetFileName(_envFileNames[packageIndex]));
+                    System.IO.File.Move(_envFileNames[packageIndex], fileName);
+                }
+                catch (Exception ex)
+                {
+                    new Exception($"File could not be moved to the archive directory. Exception found : {ex.Message}");
+                }
+
                 _packages[packageIndex] = null;
+                _envFileNames[packageIndex] = null;
                 AasxServer.Program.signalNewData(2);
                 return true;
             }
@@ -58,22 +75,27 @@ namespace IO.Swagger.Services
             fileSize = 0;
             int packageIndex = int.Parse(packageId);
             var requestedPackage = _packages[packageIndex];
-            if (requestedPackage != null)
+            var requestedFileName = _envFileNames[packageIndex];
+            if (!string.IsNullOrEmpty(requestedFileName) && requestedPackage != null)
             {
-                //string tempFileName = "./temp/" + Path.GetFileName(_envFileNames[packageIndex]);
-                //requestedPackage.SaveAs(tempFileName);
-                // return as FILE
-                FileStream packageStream = System.IO.File.OpenRead(_envFileNames[packageIndex]);
-                // transform the string into bytes
-                byteArray = new byte[packageStream.Length];
-                // reading the data
-                packageStream.Read(byteArray, 0, byteArray.Length);
-                //read the file name and size
-                fileName = Path.GetFileName(_envFileNames[packageIndex]);
-                fileSize = packageStream.Length;
+                //Create Temp file
+                string copyFileName;
+                try
+                {
+                    copyFileName = Path.GetTempFileName().Replace(".tmp", ".aasx");
+                    System.IO.File.Copy(requestedFileName, copyFileName, true);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Error while creating temp file for {requestedFileName} : {ex.Message}");
+                }
+
+                byteArray = System.IO.File.ReadAllBytes(copyFileName);
+                fileName = Path.GetFileName(requestedFileName);
+                fileSize = byteArray.Length;
 
                 //Delete Temp file
-                //System.IO.File.Delete(tempFileName);
+                System.IO.File.Delete(copyFileName);
                 return true;
             }
 
@@ -144,6 +166,7 @@ namespace IO.Swagger.Services
                         throw new Exception($"Could not create the file as the detastructure is completely filled.");
                     }
                     _packages[emptyPackageIndex] = newAasx;
+                    _envFileNames[emptyPackageIndex] = newFileName;
                     packageIndex = emptyPackageIndex;
                     return true;
                 }

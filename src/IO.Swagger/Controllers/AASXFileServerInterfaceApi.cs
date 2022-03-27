@@ -95,11 +95,11 @@ namespace IO.Swagger.Controllers
                 {
                     return NotFound($"AAXS with requested packageId not found.");
                 }
-
                 //TODO: whether to use "content-disposition"
                 HttpContext.Response.Headers.Add("X-FileName", fileName);
                 HttpContext.Response.ContentLength = fileSize;
-                return new ObjectResult(content);
+                HttpContext.Response.Body.WriteAsync(content);
+                return new EmptyResult();
             }
             catch (Exception e)
             {
@@ -206,45 +206,6 @@ namespace IO.Swagger.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-
-        //TODO:Remove
-        /// <summary>
-        /// Old API to list all the packages and corresponding AASs.
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("/server/listaas")]
-        [ValidateModelState]
-        [SwaggerOperation("ListAAS")]
-        [SwaggerResponse(statusCode: 200, type: typeof(byte[]), description: "Requested AASX package")]
-        public virtual IActionResult ListAAS()
-        {
-            Console.WriteLine("Into ASP.Net Core list aas.");
-            dynamic res = new ExpandoObject();
-            // get the list
-            var aaslist = new List<string>();
-
-            int aascount = AasxServer.Program.env.Length;
-
-            for (int i = 0; i < aascount; i++)
-            {
-                if (AasxServer.Program.env[i] != null)
-                {
-                    var aas = AasxServer.Program.env[i].AasEnv.AdministrationShells[0];
-                    string idshort = aas.idShort;
-                    aaslist.Add(i.ToString() + " : "
-                        + idshort + " : "
-                        + aas.identification + " : "
-                        + AasxServer.Program.envFileName[i]);
-                }
-            }
-
-            res.aaslist = aaslist;
-
-            return new ObjectResult(res);
-        }
-
 
     }
 }
