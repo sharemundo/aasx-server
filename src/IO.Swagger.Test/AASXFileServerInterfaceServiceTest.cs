@@ -3,6 +3,7 @@ using NUnit.Framework;
 using RestSharp;
 using System;
 using System.IO;
+using System.Text;
 
 namespace IO.Swagger.Test
 {
@@ -23,19 +24,19 @@ namespace IO.Swagger.Test
             _client = new RestClient(options);
         }
 
-        //[Test]
-        //public void TestGetAASXByPackageId()
-        //{
-        //    var restRquest = new RestRequest("/packages/{packageId}")
-        //            .AddUrlSegment("packageId", "MA");
+        [Test]
+        public void TestGetAASXByPackageId()
+        {
+            var restRquest = new RestRequest("/packages/{packageId}")
+                    .AddUrlSegment("packageId", "MA");
 
-        //    var response = _client?.GetAsync(restRquest).Result;
+            var response = _client?.GetAsync(restRquest).Result;
 
-        //    var filename = @"C:\Development\Test\Test.aasx";
-        //    var bytes = response?.Content;
-        //    var content = Encoding.UTF8.GetBytes(bytes);
-        //    File.WriteAllBytes(filename, content);
-        //}
+            var filename = @"C:\Development\Test\Test.aasx";
+            var bytes = response?.Content;
+            var content = Encoding.UTF8.GetBytes(bytes);
+            File.WriteAllBytes(filename, response.RawBytes);
+        }
 
         [Test]
         public void TestPutAASXPackageById()
