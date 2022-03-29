@@ -849,6 +849,10 @@ namespace IO.Swagger.Helpers
                     List<object> values = new List<object>();
                     foreach (var smElement in submodel.submodelElements)
                     {
+                        if (smElement.submodelElement is Operation || smElement.submodelElement is Capability)
+                        {
+                            continue;
+                        }
                         object value = GetValueOnly(smElement.submodelElement, level, extent);
                         values.Add(value);
                     }
@@ -863,6 +867,10 @@ namespace IO.Swagger.Helpers
                     {
                         //When core, should only include direct child elements. SMEs of child collection cannot be considered as direct child
                         if ((smElement.submodelElement is SubmodelElementCollection) && level.Equals("core", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+                        else if(smElement.submodelElement is Operation || smElement.submodelElement is Capability)
                         {
                             continue;
                         }
