@@ -75,7 +75,9 @@
                                 </td>
                             }
                             <td><p style="border: 3px solid blue; padding: 1em"><strong>@node.aas.idShort</strong></p></td>
-                            <td><p style="border: 3px solid blue; padding: 1em"><strong>@value</strong></p></td>
+                            <td>
+                                <p style="border: 3px solid blue; padding: 1em"><strong>@value</strong></p>
+                            </td>
                             <td>
                                 @{
                                     float actual = 0.0f;
@@ -91,9 +93,9 @@
                                     g.Clear(Color.White);
 
                                     Brush blueBrush = new SolidBrush(Color.Blue);
-                                    Pen bluePen = new Pen(Color.Blue, 2.0f);
+                                    Pen bluePen = new Pen(Color.Blue, 3.0f);
 
-                                    Rectangle rect = new Rectangle(2, 2, 198, 198);
+                                    Rectangle rect = new Rectangle(10, 10, 190, 190);
 
                                     float startAngle = 270.0f;
                                     float sweepAngle = 360.0f * (actual / total);
@@ -119,7 +121,7 @@
                                                 image = getImage(node.manufacturerLogo, node.envIndex);
                                                 if (image != null)
                                                 {
-                                                    <img src=data:image;base64,@image style="height:60px;" alt="" />
+                                                    <img src=data:image;base64,@image style="height:40px;" alt="" />
                                                 }
                                             }
                                         </bold>
