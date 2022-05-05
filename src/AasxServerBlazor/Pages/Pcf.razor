@@ -4,8 +4,8 @@
 
 @page "/pcf";
 
-<div class="relative flex min-h-screen flex-col justify-center overflow-hidden bg-gray-50 py-6 sm:py-12">
-    <img src="https://play.tailwindcss.com/img/beams.jpg" alt="" class="absolute top-1/2 left-1/2 max-w-none -translate-x-1/2 -translate-y-1/2" width="1308" />
+    <div class="relative flex min-h-screen flex-col justify-center overflow-hidden bg-gray-50 py-6 sm:py-12">
+        <img src="https://play.tailwindcss.com/img/beams.jpg" alt="" class="absolute top-1/2 left-1/2 max-w-none -translate-x-1/2 -translate-y-1/2" width="1308" />
 
         @{
             DateTime timeStamp = DateTime.UtcNow;
@@ -19,66 +19,66 @@
 
             nextLevel(node, total, timeStamp);
         }
-</div>
+    </div>
 
-@{
-    void nextLevel(AasxTask.cfpNode node, float total, DateTime timeStamp, bool moduleOnly = false)
-    {
-    <div class="mb-2 relative bg-white px-6 pt-2 pb-2 shadow-xl ring-1 ring-gray-900/5 sm:mx-auto sm:rounded-lg sm:px-8">
+    @{
+        void nextLevel(AasxTask.cfpNode node, float total, DateTime timeStamp, bool moduleOnly = false)
+        {
+            <div class="mb-2 relative bg-white px-6 pt-4 pb-2 shadow-xl ring-1 ring-gray-900/5 sm:mx-auto sm:rounded-lg sm:px-8">
 
-        @{
+                @{
 
-            while (node != null)
-            {
-                if (node.iChild == 0)
-                {
-
-                    bool view = false;
-                    string value = "";
-                    if (moduleOnly)
+                    while (node != null)
                     {
-                        if (node.cradleToGateModule != null)
+                        if (node.iChild == 0)
                         {
-                            value = node.cradleToGateModule.value;
-                            view = true;
-                        }
-                    }
-                    else
-                    {
-                        if (node.children.Count != 0)
-                        {
-                            if (node.cradleToGateCombination != null)
+
+                            bool view = false;
+                            string value = "";
+                            if (moduleOnly)
                             {
-                                value = node.cradleToGateCombination.value;
-                                view = true;
+                                if (node.cradleToGateModule != null)
+                                {
+                                    value = node.cradleToGateModule.value;
+                                    view = true;
+                                }
                             }
-                        }
-                        else
-                        {
-                            if (node.cradleToGateModule != null)
+                            else
                             {
-                                value = node.cradleToGateModule.value;
-                                view = true;
+                                if (node.children.Count != 0)
+                                {
+                                    if (node.cradleToGateCombination != null)
+                                    {
+                                        value = node.cradleToGateCombination.value;
+                                        view = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (node.cradleToGateModule != null)
+                                    {
+                                        value = node.cradleToGateModule.value;
+                                        view = true;
+                                    }
+                                }
                             }
-                        }
-                    }
-                    float actual = 0.0f;
-                    try
-                    {
-                        actual = (float)Convert.ToDouble(value);
-                    }
-                    catch { }
+                            float actual = 0.0f;
+                            try
+                            {
+                                actual = (float)Convert.ToDouble(value);
+                            }
+                            catch { }
 
-                    if (view)
-                    {
-                        string productImage = getImage(node.productImage, node.envIndex);
-                        string manufacturerLogo = getImage(node.manufacturerLogo, node.envIndex);
-                        string percent = Convert.ToInt32(actual / total * 100).ToString();
+                            if (view)
+                            {
+                                string productImage = getImage(node.productImage, node.envIndex);
+                                string manufacturerLogo = getImage(node.manufacturerLogo, node.envIndex);
+                                string percent = Convert.ToInt32(actual / total * 100).ToString();
 
-                        <div class="mb-2 flex flex-row space-x-2">
+                                <div class="mb-2 flex flex-row space-x-2">
 
-                            <div class="grid place-items-center self-center">
-                                <div class="w-10">
+                                    <div class="grid place-items-center self-center">
+                                        <div class="w-10">
                                             <svg height="35" width="35" viewBox="0 0 20 20">
                                                 <circle r="5" cx="10" cy="10" fill="white"
                                                         stroke="blue"
@@ -86,88 +86,88 @@
                                                         stroke-dasharray="calc(@percent * 31.42 / 100) 31.42"
                                                         transform="rotate(-90) translate(-20)" />
                                                 <circle r="9.5" cx="10" cy="10" fill="white"
-                                                        stroke-width="0.5" 
+                                                        stroke-width="0.5"
                                                         fill-opacity="0"
                                                         stroke="blue"
                                                         transform="rotate(-90) translate(-20)" />
                                             </svg>
+                                        </div>
+                                        <div class="self-center">@value</div>
+                                    </div>
+                                    @if (productImage != null)
+                                    {
+                                        <img src=data:image;base64,@productImage class="h-16" />
+                                    }
+                                    @if (manufacturerLogo != null)
+                                    {
+                                        <img src=data:image;base64,@manufacturerLogo class="h-6 self-center" />
+                                    }
+                                    <div class="self-center">
+                                        <div class="font-bold text-slate-700 dark:text-slate-500">@node.aas.idShort</div>
+                                    </div>
                                 </div>
-                                <div class="self-center">@value</div>
-                            </div>
-                            @if (productImage != null)
-                            {
-                                <img src=data:image;base64,@productImage class="h-16" />
+                                if (!moduleOnly && node.children.Count != 0 && node.cradleToGateModule != null)
+                                {
+                                    nextLevel(node, total, timeStamp, true);
+                                }
                             }
-                            @if (manufacturerLogo != null)
-                            {
-                                <img src=data:image;base64,@manufacturerLogo class="h-6 self-center" />
-                            }
-                            <div class="self-center">
-                                <div class="font-bold text-slate-700 dark:text-slate-500">@node.aas.idShort</div>
-                            </div>
-                        </div>
-                        if (!moduleOnly && node.children.Count != 0 && node.cradleToGateModule != null)
+                        }
+
+                        // move up, if all children iterated
+                        if (moduleOnly || node.iChild == node.children.Count)
                         {
-                            nextLevel(node, total, timeStamp, true);
+                            node = null;
+                        }
+                        else
+                        {
+                            // Interate children
+                            nextLevel(node.children[node.iChild], total, timeStamp);
+                            node.iChild++;
                         }
                     }
                 }
 
-                // move up, if all children iterated
-                if (moduleOnly || node.iChild == node.children.Count)
-                {
-                    node = null;
-                }
-                else
-                {
-                    // Interate children
-                    nextLevel(node.children[node.iChild], total, timeStamp);
-                    node.iChild++;
-                }
-            }
+            </div>
         }
 
-    </div>
-    }
-
-    string getImage(File f, int envIndex)
-    {
-        if (f == null || envIndex == -1)
-            return null;
-
-        if (f.value != "")
+        string getImage(File f, int envIndex)
         {
-            string[] split = f.value.Split(new Char[] { '/' });
-            if (split.Length == 2 || split.Length > 1 && split[1].ToLower() == "aasx")
+            if (f == null || envIndex == -1)
+                return null;
+
+            if (f.value != "")
             {
-                split = f.value.Split(new Char[] { '.' });
-                switch (split.Last().ToLower())
+                string[] split = f.value.Split(new Char[] { '/' });
+                if (split.Length == 2 || split.Length > 1 && split[1].ToLower() == "aasx")
                 {
-                    case "jpg":
-                    case "bmp":
-                    case "png":
-                        System.IO.Stream s = null;
-                        try
-                        {
-                            s = Program.env[envIndex].GetLocalStreamFromPackage(f.value);
-                        }
-                        catch { }
-                        if (s != null)
-                        {
-                            using (var m = new System.IO.MemoryStream())
+                    split = f.value.Split(new Char[] { '.' });
+                    switch (split.Last().ToLower())
+                    {
+                        case "jpg":
+                        case "bmp":
+                        case "png":
+                            System.IO.Stream s = null;
+                            try
                             {
-                                s.CopyTo(m);
-                                return System.Convert.ToBase64String(m.ToArray());
+                                s = Program.env[envIndex].GetLocalStreamFromPackage(f.value);
                             }
-                        }
-                        break;
+                            catch { }
+                            if (s != null)
+                            {
+                                using (var m = new System.IO.MemoryStream())
+                                {
+                                    s.CopyTo(m);
+                                    return System.Convert.ToBase64String(m.ToArray());
+                                }
+                            }
+                            break;
+                    }
                 }
             }
+            return null;
         }
-        return null;
     }
-}
 
-@code {
+    @code {
 
-}
+    }
