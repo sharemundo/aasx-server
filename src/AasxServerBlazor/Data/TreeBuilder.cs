@@ -280,7 +280,7 @@ namespace AasxServerBlazor.Data
                 viewer.Login(uri.AbsoluteUri, Environment.GetEnvironmentVariable("UACLUsername"), Environment.GetEnvironmentVariable("UACLPassword"));
 
                 NodesetViewerNode rootNode = viewer.GetRootNode().GetAwaiter().GetResult();
-                if (rootNode.Children)
+                if ((rootNode != null) && rootNode.Children)
                 {
                     CreateViewFromUANode(rootItem, viewer, rootNode, i);
                 }

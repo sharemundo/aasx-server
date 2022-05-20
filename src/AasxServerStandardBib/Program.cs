@@ -127,7 +127,13 @@ namespace AasxServer
             string[] fileNames = null;
             if (Directory.Exists(AasxHttpContextHelper.DataPath))
             {
+                if (AasxHttpContextHelper.DataPath == ".")
+                {
+                    AasxHttpContextHelper.DataPath = Directory.GetCurrentDirectory();
+                }
+
                 fileNames = Directory.GetFiles(AasxHttpContextHelper.DataPath, "*.aasx");
+                Console.WriteLine("Found " + fileNames.Length.ToString() + " AAS in directory " + AasxHttpContextHelper.DataPath);
                 Array.Sort(fileNames);
 
                 while (envi < fileNames.Length)

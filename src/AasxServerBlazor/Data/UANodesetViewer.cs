@@ -251,7 +251,11 @@ namespace AasxServerBlazor.Data
                 }
                 catch (Exception)
                 {
-                    OpcSessionHelper.Instance.Disconnect(session.SessionId.ToString());
+                    if ((session != null) && session.Connected)
+                    {
+                        OpcSessionHelper.Instance.Disconnect(session.SessionId.ToString());
+                    }
+
                     lastRetry = true;
                 }
             }
@@ -464,7 +468,11 @@ namespace AasxServerBlazor.Data
                 }
                 catch (Exception)
                 {
-                    OpcSessionHelper.Instance.Disconnect(session.SessionId.ToString());
+                    if ((session != null) && session.Connected)
+                    {
+                        OpcSessionHelper.Instance.Disconnect(session.SessionId.ToString());
+                    }
+
                     lastRetry = true;
                 }
             }
