@@ -5,6 +5,7 @@ using AdminShellNS;
 using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Net.Client;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 
 namespace AasxDemonstration
@@ -93,7 +95,9 @@ namespace AasxDemonstration
         {
             private static ICslQueryProvider _queryProvider = null;
             private static ConcurrentDictionary<string, object> _values = new ConcurrentDictionary<string, object>();
-            private Timer _queryTimer = new Timer(RunQuery, null, Timeout.Infinite, Timeout.Infinite);
+            private static ConcurrentDictionary<string, object> _values1MinuteAgo = new ConcurrentDictionary<string, object>();
+            private Timer _queryTimer = new Timer(RunQuerys, null, Timeout.Infinite, Timeout.Infinite);
+            private static CarbonIntensityQueryResult _currentIntensity = null;
 
             public double GetValue(string sourceID)
             {
@@ -107,21 +111,45 @@ namespace AasxDemonstration
                     else
                     {
                         // calculate our other values
-                        if ((sourceID == "ActiveEnergy1minTotal") && _values.ContainsKey("ActiveEnergy"))
+                        if ((sourceID == "ActiveEnergy1minTotal") && _values.ContainsKey("ActiveEnergy") && _values1MinuteAgo.ContainsKey("ActiveEnergy"))
                         {
-                            // active energy is in Wh, hence divide by 60
-                            return ((double) _values["ActiveEnergy"]) / 60;
+                            double activeEnergyNow = (double)_values["ActiveEnergy"];
+                            double activeEnergy1MinuteAgo = (double)_values1MinuteAgo["ActiveEnergy"];
+                            return activeEnergyNow - activeEnergy1MinuteAgo;
                         }
 
                         if ((sourceID == "Co2EquivalentTotal") && _values.ContainsKey("ActiveEnergy"))
                         {
-                            // we use the German energy mix as a baseline, which produces 0.515g/Wh CO2
-                            return ((double)_values["ActiveEnergy"]) * 0.515;
+                            // Active Energy is in Wh
+                            // Carbon Intensity is in gCo2/KWh
+                            // Therefore, to get kgCO2, we need to divide by 1 million
+                            if ((_currentIntensity == null) ||
+                                (_currentIntensity.data.Length == 0) ||
+                                (_currentIntensity.data[0] == null) ||
+                                (_currentIntensity.data[0].intensity == null))
+                            {
+                                // the German carbon intensity average is 515gCO2/kWh
+                                return ((double)_values["ActiveEnergy"]) * 515 / 1000 / 1000;
+                            }
+                            else
+                            {
+                                return ((double)_values["ActiveEnergy"]) * _currentIntensity.data[0].intensity.actual / 1000 / 1000;
+                            }
                         }
 
-                        if ((sourceID == "Co2Equivalent1minTotal") && _values.ContainsKey("ActiveEnergy"))
+                        if ((sourceID == "Co2Equivalent1minTotal") && _values.ContainsKey("ActiveEnergy") && _values1MinuteAgo.ContainsKey("ActiveEnergy"))
                         {
-                            return ((double)_values["ActiveEnergy"]) / 60 * 0.515;
+                            if ((_currentIntensity == null) ||
+                                (_currentIntensity.data.Length == 0) ||
+                                (_currentIntensity.data[0] == null) ||
+                                (_currentIntensity.data[0].intensity == null))
+                            {
+                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * 515 / 1000 / 1000;
+                            }
+                            else
+                            {
+                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * _currentIntensity.data[0].intensity.actual / 1000 / 1000;
+                            }
                         }
 
                         // if we can't find it, simply return 0
@@ -136,11 +164,29 @@ namespace AasxDemonstration
                 }
             }
 
-            private static void RunQuery(object state)
+            private static async void RunQuerys(object state)
             {
-                // read the newest row from our OPC UA telemetry table
-                string query = "opcua_telemetry | top 1 by creationTimeUtc desc";
+                // read the row from our OPC UA telemetry table
+                RunADXQuery("opcua_telemetry | top 1 by creationTimeUtc desc", _values);
 
+                // read the row from our OPC UA telemetry table
+                RunADXQuery("opcua_telemetry | where creationTimeUtc > (now() - 2m) | where creationTimeUtc < (now() - 1m) | top 1 by creationTimeUtc desc", _values1MinuteAgo);
+
+                try
+                {
+                    // read current carbon intensity from the UK national energy grid's carbon intensity service at https://api.carbonintensity.org.uk/intensity
+                    HttpClient webClient = new HttpClient();
+                    var response = await webClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "https://api.carbonintensity.org.uk/intensity")).ConfigureAwait(false);
+                    _currentIntensity = JsonConvert.DeserializeObject<CarbonIntensityQueryResult>(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                }
+                catch (Exception)
+                {
+                    // do nothing
+                }
+            }
+
+            private static void RunADXQuery(string query, ConcurrentDictionary<string, object> values)
+            {
                 ClientRequestProperties clientRequestProperties = new ClientRequestProperties()
                 {
                     ClientRequestId = Guid.NewGuid().ToString()
@@ -158,13 +204,13 @@ namespace AasxDemonstration
                                 {
                                     if (reader.GetValue(i) != null)
                                     {
-                                        if (_values.ContainsKey(reader.GetName(i)))
+                                        if (values.ContainsKey(reader.GetName(i)))
                                         {
-                                            _values[reader.GetName(i)] = reader.GetValue(i);
+                                            values[reader.GetName(i)] = reader.GetValue(i);
                                         }
                                         else
                                         {
-                                            _values.TryAdd(reader.GetName(i), reader.GetValue(i));
+                                            values.TryAdd(reader.GetName(i), reader.GetValue(i));
                                         }
                                     }
                                 }
@@ -191,12 +237,12 @@ namespace AasxDemonstration
 
             public SourceSystemAzureDataExplorer(
                 string sourceAddress,
-                string user, string password,
+                string user, string tenant,
                 string credentials)
                 : base()
             {
                 string key = Environment.GetEnvironmentVariable("ADX_PASSWORD");
-                KustoConnectionStringBuilder connectionString = new KustoConnectionStringBuilder(sourceAddress, credentials).WithAadApplicationKeyAuthentication(user, key, password);
+                KustoConnectionStringBuilder connectionString = new KustoConnectionStringBuilder(sourceAddress, credentials).WithAadApplicationKeyAuthentication(user, key, tenant);
                 _queryProvider = KustoClientFactory.CreateCslQueryProvider(connectionString);
 
                 string queryInternval = Environment.GetEnvironmentVariable("ADX_QUERY_INTERVAL");
