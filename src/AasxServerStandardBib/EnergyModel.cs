@@ -122,18 +122,18 @@ namespace AasxDemonstration
                         {
                             // Active Energy is in Wh
                             // Carbon Intensity is in gCo2/KWh
-                            // Therefore, to get kgCO2, we need to divide by 1 million
+                            // Therefore, to get gCO2/Wh, we need to divide by 1000
                             if ((_currentIntensity == null) ||
                                 (_currentIntensity.data.Length == 0) ||
                                 (_currentIntensity.data[0] == null) ||
                                 (_currentIntensity.data[0].intensity == null))
                             {
                                 // the German carbon intensity average is 515gCO2/kWh
-                                return ((double)_values["ActiveEnergy"]) * 515 / 1000 / 1000;
+                                return ((double)_values["ActiveEnergy"]) * 515 / 1000;
                             }
                             else
                             {
-                                return ((double)_values["ActiveEnergy"]) * _currentIntensity.data[0].intensity.actual / 1000 / 1000;
+                                return ((double)_values["ActiveEnergy"]) * _currentIntensity.data[0].intensity.actual / 1000;
                             }
                         }
 
@@ -144,11 +144,11 @@ namespace AasxDemonstration
                                 (_currentIntensity.data[0] == null) ||
                                 (_currentIntensity.data[0].intensity == null))
                             {
-                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * 515 / 1000 / 1000;
+                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * 515 / 1000;
                             }
                             else
                             {
-                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * _currentIntensity.data[0].intensity.actual / 1000 / 1000;
+                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * _currentIntensity.data[0].intensity.actual / 1000;
                             }
                         }
 
