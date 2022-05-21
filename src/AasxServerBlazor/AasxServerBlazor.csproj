@@ -57,4 +57,8 @@
     <None Remove="Application.Config.xml" />
     <None Remove="erich-repo.aasx" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\ServiceDependencies\" />
+  </ItemGroup>
 </Project>
