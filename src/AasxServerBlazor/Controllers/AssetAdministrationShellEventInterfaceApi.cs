@@ -1,5 +1,4 @@
 ﻿using AasxDemonstration;
-using AasxRestServerLibrary;
 using AdminShellEvents;
 using AdminShellNS;
 using IO.Swagger.Attributes;
