@@ -12,9 +12,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
+using static AdminShellNS.AdminShellV20;
 
 namespace AasxDemonstration
 {
@@ -98,6 +101,7 @@ namespace AasxDemonstration
             private static ConcurrentDictionary<string, object> _values1MinuteAgo = new ConcurrentDictionary<string, object>();
             private Timer _queryTimer = new Timer(RunQuerys, null, Timeout.Infinite, Timeout.Infinite);
             private static CarbonIntensityQueryResult _currentIntensity = null;
+            private static float _geCO2Footprint = 0.0f;
 
             public double GetValue(string sourceID)
             {
@@ -144,11 +148,11 @@ namespace AasxDemonstration
                                 (_currentIntensity.data[0] == null) ||
                                 (_currentIntensity.data[0].intensity == null))
                             {
-                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * 515 / 1000;
+                                return ((((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * 515 / 1000) + _geCO2Footprint;
                             }
                             else
                             {
-                                return (((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * _currentIntensity.data[0].intensity.actual / 1000;
+                                return ((((double)_values["ActiveEnergy"]) - ((double)_values1MinuteAgo["ActiveEnergy"])) * _currentIntensity.data[0].intensity.actual / 1000) + _geCO2Footprint;
                             }
                         }
 
@@ -161,6 +165,65 @@ namespace AasxDemonstration
                     Debug.WriteLine(ex.Message);
 
                     return 0.0;
+                }
+            }
+
+            static float ReadCO2Per1Minute(string aasServerAddress, string aasId, string smIdShort)
+            {
+                try
+                {
+                    HttpClient client = new HttpClient();
+                    client.BaseAddress = new Uri(aasServerAddress);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    Submodel submodel = null;
+                    var path = $"/aas/{aasId}/submodels/{smIdShort}/complete";
+                    HttpResponseMessage response = client.GetAsync(path).GetAwaiter().GetResult();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                        using (TextReader reader = new StringReader(json))
+                        {
+                            JsonSerializer serializer = new JsonSerializer();
+                            serializer.Converters.Add(new AdminShellConverters.JsonAasxConverter("modelType", "name"));
+                            submodel = (Submodel)serializer.Deserialize(reader, typeof(Submodel));
+                        }
+                    }
+
+                    // retrieve energy Submodel
+                    var mm = AdminShell.Key.MatchMode.Relaxed;
+
+                    // access electrical energy
+                    var smcEe = submodel?.submodelElements?.FindFirstSemanticIdAs<AdminShell.SubmodelElementCollection>(
+                        new AdminShell.Key(AdminShell.Key.ConceptDescription, false, AdminShell.Identification.IRI,
+                            "https://admin-shell.io/sandbox/idta/carbon-reporting/cd/electrical-energy/1/0"), mm);
+
+                    // access CO2 per 1 minute
+                    foreach (var smcPhase in smcEe?.value?.FindAllSemanticIdAs<AdminShell.SubmodelElementCollection>(
+                        new AdminShell.Key(AdminShell.Key.ConceptDescription, false, AdminShell.Identification.IRI,
+                            "https://admin-shell.io/sandbox/idta/carbon-reporting/cd/electrical-total/1/0"), mm))
+                    {
+                        // get value
+                        var value = smcPhase.value.FindFirstSemanticIdAs<AdminShell.Property>(
+                            new AdminShell.Key(AdminShell.Key.ConceptDescription, false, AdminShell.Identification.IRI,
+                            "https://admin-shell.io/sandbox/idta/carbon-reporting/cd/co2-equivalent-per-1-min/1/0"), mm)?.value;
+
+                        if (value != null && float.TryParse(value, out float f))
+                        {
+                            return f;
+                        }
+                        else
+                        {
+                            return 0.0f;
+                        }
+                    }
+
+                    return 0.0f;
+                }
+                catch (Exception)
+                {
+                    return 0.0f;
                 }
             }
 
@@ -183,6 +246,9 @@ namespace AasxDemonstration
                 {
                     // do nothing
                 }
+
+                // get CO2 foot print data from our supply chain, in this case the GE machine's AAS
+                _geCO2Footprint = ReadCO2Per1Minute("https://carbonreportingge.azurewebsites.net/", "0", "Energy_model_harmonized");
             }
 
             private static void RunADXQuery(string query, ConcurrentDictionary<string, object> values)
