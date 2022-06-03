@@ -88,7 +88,7 @@ namespace AasxServerBlazor
                     {
                         Version = "Final-Draft",
                         Title = "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository",
-                        Description = "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository (ASP.NET Core 3.1)",
+                        Description = "DotAAS Part 2 | HTTP/REST | Asset Administration Shell Repository (ASP.NET Core 6.0)",
                         Contact = new OpenApiContact()
                         {
                             Name = "Michael Hoffmeister, Torben Miny, Andreas Orzelski, Manuel Sauer, Constantin Ziesche",
